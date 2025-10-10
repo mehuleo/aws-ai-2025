@@ -9,7 +9,7 @@ declare global {
 }
 
 interface GoogleLoginButtonProps {
-  onLoginSuccess: (token: string) => void;
+  onLoginSuccess: (user: any) => void;
   onTokenResponse?: (response: any) => void;
   isLoading?: boolean;
   disabled?: boolean;
@@ -26,6 +26,36 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
   useEffect(() => {
     initializeGoogleAuth();
   }, []);
+
+  const validateTokenWithBackend = async (token: string): Promise<any> => {
+    try {
+      const response = await fetch('https://api.superagent.diy/v1/validateGoogleAuth', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'validate_token',
+          token: token
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if (!data.success) {
+        throw new Error(data.error || 'Authentication failed');
+      }
+
+      return data.user;
+    } catch (error) {
+      console.error('Error validating token with backend:', error);
+      throw error;
+    }
+  };
 
   const initializeGoogleAuth = () => {
     if (window.google) {
@@ -72,7 +102,7 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
     }
   };
 
-  const handleCredentialResponse = (response: any) => {
+  const handleCredentialResponse = async (response: any) => {
     console.log('Received credential response:', response);
     
     try {
@@ -80,8 +110,34 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
         throw new Error('No credential received from Google');
       }
 
-      // Call the parent component's success handler
-      onLoginSuccess(response.credential);
+      // Validate token with backend
+      const user = await validateTokenWithBackend(response.credential);
+      
+      // Store specific user data fields in localStorage
+      if (user.email) {
+        localStorage.setItem('email', user.email);
+      }
+      if (user.sid) {
+        localStorage.setItem('sid', user.sid);
+      }
+      if (user.name) {
+        localStorage.setItem('name', user.name);
+      }
+      if (user.picture) {
+        localStorage.setItem('picture', user.picture);
+      }
+      if (user.email_verified !== undefined) {
+        localStorage.setItem('email_verified', user.email_verified.toString());
+      }
+      if (user.calendar_access !== undefined) {
+        localStorage.setItem('calendar_access', user.calendar_access.toString());
+      }
+      
+      // Also store the complete user object for backward compatibility
+      localStorage.setItem('user', JSON.stringify(user));
+      
+      // Call the parent component's success handler with user data
+      onLoginSuccess(user);
       
       // Also request OAuth token for additional scopes if callback is provided
       if (onTokenResponse && window.google) {
@@ -95,6 +151,7 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
       
     } catch (error) {
       console.error('Error processing Google auth response:', error);
+      // You might want to show an error message to the user here
     }
   };
 

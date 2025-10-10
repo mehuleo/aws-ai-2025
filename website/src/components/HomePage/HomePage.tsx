@@ -33,48 +33,30 @@ class HomePage extends Component<HomePageProps, HomePageState> {
     // Component mounted - no Google auth initialization needed here anymore
   }
 
-  handleLoginSuccess = (token: string) => {
-    console.log('Received login success with token:', token);
+  handleLoginSuccess = (user: any) => {
+    console.log('Received login success with user:', user);
     this.setState({ isLoading: true });
     
     try {
-      if (!token) {
-        throw new Error('No token received from Google');
+      if (!user) {
+        throw new Error('No user data received from backend');
       }
 
-      // Decode the JWT token to get user info
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      
       this.setState({
         isAuthenticated: true,
-        user: {
-          id: payload.sub,
-          name: payload.name,
-          email: payload.email,
-          picture: payload.picture
-        },
+        user: user,
         isLoading: false
       });
 
-      console.log('User authenticated successfully:', payload);
+      console.log('User authenticated successfully:', user);
       
       // Store user data in localStorage for persistence
-      localStorage.setItem('user', JSON.stringify({
-        id: payload.sub,
-        name: payload.name,
-        email: payload.email,
-        picture: payload.picture
-      }));
+      localStorage.setItem('user', JSON.stringify(user));
       
-      // Redirect to Dashboard after successful login (backend call is optional)
+      // Redirect to Dashboard after successful login
       setTimeout(() => {
         window.location.href = '/dashboard';
       }, 1000); // Small delay to show success state
-      
-      // Optionally send token to backend (non-blocking)
-      this.sendTokenToBackend(token).catch(error => {
-        console.log('Backend not available yet, continuing with frontend-only auth:', error);
-      });
       
     } catch (error) {
       console.error('Error processing Google auth response:', error);

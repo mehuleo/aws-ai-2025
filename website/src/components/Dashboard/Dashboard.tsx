@@ -16,6 +16,8 @@ import {
 } from '../ui/sidebar';
 import { Settings, Sliders, LogOut, User } from 'lucide-react';
 import logoImage from '../../assets/images/logo.png';
+import SettingsComponent from './Settings';
+import CustomizeAgent from './CustomizeAgent';
 import './Dashboard.css';
 
 // Extend Window interface to include Google Identity Services
@@ -49,43 +51,117 @@ class Dashboard extends Component<DashboardProps, DashboardState> {
     this.checkAuthentication();
   }
 
-  checkAuthentication(): void {
+  async checkAuthentication(): Promise<void> {
     try {
-      // Check if user data exists in localStorage
+      // Check if required authentication data exists in localStorage
+      const userEmail = localStorage.getItem('email');
+      const userSid = localStorage.getItem('sid');
       const userData = localStorage.getItem('user');
-      const accessToken = localStorage.getItem('google_access_token');
-      console.log('userData', userData);
-      console.log('accessToken', accessToken);
       
-      if (userData) {
-        const user = JSON.parse(userData);
-        this.setState({
-          isAuthenticated: true,
-          user: user,
-          isLoading: false
-        });
-        console.log('User authenticated:', user);
-        
-        // Check if access token is available (optional)
-        if (accessToken) {
-          console.log('Access token available for API calls');
-        } else {
-          console.log('No access token available - basic authentication only');
+      console.log('Authentication data:', { email: userEmail, sid: userSid, hasUserData: !!userData });
+      
+      if (userEmail && userSid) {
+        // Validate user with backend using email and sid
+        try {
+          const response = await fetch('https://api.superagent.diy/v1/validateGoogleAuth', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              action: 'get_user',
+              email: userEmail,
+              sid: userSid
+            })
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            if (data.success && data.user) {
+              // Authentication successful - update localStorage with fresh data
+              const updatedUser = data.user;
+              
+              // Update localStorage with fresh user data
+              if (updatedUser.email) localStorage.setItem('email', updatedUser.email);
+              if (updatedUser.sid) localStorage.setItem('sid', updatedUser.sid);
+              if (updatedUser.name) localStorage.setItem('name', updatedUser.name);
+              if (updatedUser.picture) localStorage.setItem('picture', updatedUser.picture);
+              if (updatedUser.email_verified !== undefined) {
+                localStorage.setItem('email_verified', updatedUser.email_verified.toString());
+              }
+              if (updatedUser.calendar_access !== undefined) {
+                localStorage.setItem('calendar_access', updatedUser.calendar_access.toString());
+              }
+              localStorage.setItem('user', JSON.stringify(updatedUser));
+              
+              this.setState({
+                isAuthenticated: true,
+                user: updatedUser,
+                isLoading: false
+              });
+              console.log('User authenticated with backend:', updatedUser);
+              return;
+            } else {
+              // Authentication failed - user not found or invalid
+              console.log('Authentication failed - invalid user or session expired');
+              this.handleLogout();
+              return;
+            }
+          } else {
+            // HTTP error response
+            console.log('Authentication failed - HTTP error:', response.status);
+            this.handleLogout();
+            return;
+          }
+        } catch (backendError) {
+          console.error('Backend validation failed:', backendError);
+          // On backend error, logout and redirect
+          this.handleLogout();
+          return;
         }
       } else {
-        // No authentication data found, redirect to home page
-        console.log('No user data found, redirecting to home page');
-        window.location.href = '/';
+        // Missing required authentication data
+        console.log('Missing authentication data (email or sid), redirecting to home page');
+        this.handleLogout();
       }
     } catch (error) {
       console.error('Error checking authentication:', error);
-      // On error, redirect to home page
-      window.location.href = '/';
+      // On any error, logout and redirect
+      this.handleLogout();
     }
   }
 
   handleSectionChange(section: string): void {
     this.setState({ activeSection: section });
+  }
+
+  async requestCalendarAccess(): Promise<void> {
+    try {
+      const { user } = this.state;
+      if (!user) return;
+
+      const response = await fetch('https://api.superagent.diy/v1/validateGoogleAuth', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'get_calendar_access',
+          email: user.email,
+          redirect_uri: window.location.origin + '/dashboard'
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.oauth_url) {
+          // Redirect to Google OAuth for calendar access
+          window.location.href = data.oauth_url;
+        }
+      }
+    } catch (error) {
+      console.error('Error requesting calendar access:', error);
+    }
   }
 
   handleLogout(): void {
@@ -94,6 +170,12 @@ class Dashboard extends Component<DashboardProps, DashboardState> {
     // Clear all authentication data from localStorage
     localStorage.removeItem('user');
     localStorage.removeItem('google_access_token');
+    localStorage.removeItem('email');
+    localStorage.removeItem('sid');
+    localStorage.removeItem('name');
+    localStorage.removeItem('picture');
+    localStorage.removeItem('email_verified');
+    localStorage.removeItem('calendar_access');
     
     // Disable Google auto-select if available
     if (window.google) {
@@ -104,144 +186,26 @@ class Dashboard extends Component<DashboardProps, DashboardState> {
     window.location.href = '/';
   }
 
-  renderSettings(): React.JSX.Element {
-    return (
-      <div className="dashboard-section">
-        <h1 className="section-title">Settings</h1>
-        <div className="section-content">
-          <div className="settings-group">
-            <h3 className="settings-group-title">Profile Settings</h3>
-            <div className="settings-item">
-              <label className="settings-label">Display Name</label>
-              <input 
-                type="text" 
-                className="settings-input" 
-                placeholder="Enter your display name"
-              />
-            </div>
-            <div className="settings-item">
-              <label className="settings-label">Email</label>
-              <input 
-                type="email" 
-                className="settings-input" 
-                placeholder="your.email@example.com"
-              />
-            </div>
-          </div>
 
-          <div className="settings-group">
-            <h3 className="settings-group-title">Calendar Integration</h3>
-            <div className="settings-item">
-              <label className="settings-label">Google Calendar Access</label>
-              <button className="settings-button secondary">
-                Manage Permissions
-              </button>
-            </div>
-          </div>
-
-          <div className="settings-group">
-            <h3 className="settings-group-title">Notifications</h3>
-            <div className="settings-item checkbox">
-              <input type="checkbox" id="email-notifications" className="settings-checkbox" />
-              <label htmlFor="email-notifications" className="settings-label">
-                Email Notifications
-              </label>
-            </div>
-            <div className="settings-item checkbox">
-              <input type="checkbox" id="calendar-reminders" className="settings-checkbox" />
-              <label htmlFor="calendar-reminders" className="settings-label">
-                Calendar Reminders
-              </label>
-            </div>
-          </div>
-
-          <div className="settings-actions">
-            <button className="settings-button primary">Save Changes</button>
-            <button className="settings-button danger" onClick={() => this.handleLogout()}>
-              Logout
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  renderCustomizeAgent(): React.JSX.Element {
-    return (
-      <div className="dashboard-section">
-        <h1 className="section-title">Customize Agent</h1>
-        <div className="section-content">
-          <div className="settings-group">
-            <h3 className="settings-group-title">Agent Personality</h3>
-            <div className="settings-item">
-              <label className="settings-label">Agent Name</label>
-              <input 
-                type="text" 
-                className="settings-input" 
-                placeholder="Give your agent a name"
-              />
-            </div>
-            <div className="settings-item">
-              <label className="settings-label">Communication Style</label>
-              <select className="settings-select">
-                <option>Professional</option>
-                <option>Casual</option>
-                <option>Friendly</option>
-                <option>Concise</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="settings-group">
-            <h3 className="settings-group-title">Agent Behavior</h3>
-            <div className="settings-item">
-              <label className="settings-label">Response Time</label>
-              <select className="settings-select">
-                <option>Instant</option>
-                <option>Quick (1-2 seconds)</option>
-                <option>Thoughtful (3-5 seconds)</option>
-              </select>
-            </div>
-            <div className="settings-item checkbox">
-              <input type="checkbox" id="proactive-suggestions" className="settings-checkbox" defaultChecked />
-              <label htmlFor="proactive-suggestions" className="settings-label">
-                Enable Proactive Suggestions
-              </label>
-            </div>
-            <div className="settings-item checkbox">
-              <input type="checkbox" id="calendar-integration" className="settings-checkbox" defaultChecked />
-              <label htmlFor="calendar-integration" className="settings-label">
-                Integrate with Calendar
-              </label>
-            </div>
-          </div>
-
-          <div className="settings-group">
-            <h3 className="settings-group-title">Custom Instructions</h3>
-            <div className="settings-item">
-              <label className="settings-label">Additional Context</label>
-              <textarea 
-                className="settings-textarea" 
-                rows={5}
-                placeholder="Add any custom instructions or context for your agent..."
-              />
-            </div>
-          </div>
-
-          <div className="settings-actions">
-            <button className="settings-button primary">Save Configuration</button>
-            <button className="settings-button secondary">Reset to Default</button>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   renderSidebar(): React.JSX.Element {
-    const { activeSection, user } = this.state;
+    const { activeSection } = this.state;
+
+    // Get user data from localStorage
+    const userEmail = localStorage.getItem('email');
+    const userName = localStorage.getItem('name');
+    const userPicture = localStorage.getItem('picture');
+    const emailVerified = localStorage.getItem('email_verified') === 'true';
+    const calendarAccess = localStorage.getItem('calendar_access') === 'true';
 
     // Debug: Log user data to console
-    console.log('User data in sidebar:', user);
+    console.log('User data from localStorage:', {
+      email: userEmail,
+      name: userName,
+      picture: userPicture,
+      email_verified: emailVerified,
+      calendar_access: calendarAccess
+    });
 
     return (
       <Sidebar>
@@ -287,10 +251,10 @@ class Dashboard extends Component<DashboardProps, DashboardState> {
           <SidebarSeparator />
           <div className="p-3">
             <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
-              {user?.picture ? (
+              {userPicture ? (
                 <img
-                  src={user.picture}
-                  alt={user.name || 'User'}
+                  src={userPicture}
+                  alt={userName || 'User'}
                   className="w-10 h-10 rounded-full border-2 border-gray-200 flex-shrink-0"
                 />
               ) : (
@@ -300,11 +264,17 @@ class Dashboard extends Component<DashboardProps, DashboardState> {
               )}
               <div className="flex-1 min-w-0 overflow-hidden">
                 <p className="text-sm font-semibold text-gray-900 truncate">
-                  {user?.name || 'User Name'}
+                  {userName || 'User Name'}
                 </p>
                 <p className="text-xs text-gray-600 truncate">
-                  {user?.email || 'user@example.com'}
+                  {userEmail || 'user@example.com'}
                 </p>
+                {emailVerified && (
+                  <div className="flex items-center gap-1 mt-1">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <span className="text-xs text-green-600">Verified</span>
+                  </div>
+                )}
               </div>
               <button
                 onClick={() => this.handleLogout()}
@@ -347,8 +317,13 @@ class Dashboard extends Component<DashboardProps, DashboardState> {
           {this.renderSidebar()}
           <SidebarInset className="flex-1">
             <main className="dashboard-main">
-              {activeSection === 'settings' && this.renderSettings()}
-              {activeSection === 'customize' && this.renderCustomizeAgent()}
+              {activeSection === 'settings' && (
+                <SettingsComponent 
+                  onLogout={this.handleLogout}
+                  onRequestCalendarAccess={this.requestCalendarAccess}
+                />
+              )}
+              {activeSection === 'customize' && <CustomizeAgent />}
             </main>
           </SidebarInset>
         </div>
