@@ -84,7 +84,7 @@ class Dashboard extends Component<DashboardProps, DashboardState> {
               // Update localStorage with fresh user data
               if (updatedUser.email) localStorage.setItem('email', updatedUser.email);
               if (updatedUser.sid) localStorage.setItem('sid', updatedUser.sid);
-              if (updatedUser.name) localStorage.setItem('name', updatedUser.name);
+              if (updatedUser.user_name) localStorage.setItem('user_name', updatedUser.user_name);
               if (updatedUser.picture) localStorage.setItem('picture', updatedUser.picture);
               if (updatedUser.email_verified !== undefined) {
                 localStorage.setItem('email_verified', updatedUser.email_verified.toString());
@@ -193,7 +193,7 @@ class Dashboard extends Component<DashboardProps, DashboardState> {
 
     // Get user data from localStorage
     const userEmail = localStorage.getItem('email');
-    const userName = localStorage.getItem('name');
+    const userName = localStorage.getItem('user_name');
     const userPicture = localStorage.getItem('picture');
     const emailVerified = localStorage.getItem('email_verified') === 'true';
     const calendarAccess = localStorage.getItem('calendar_access') === 'true';

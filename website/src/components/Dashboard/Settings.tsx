@@ -8,7 +8,7 @@ interface SettingsProps {
 const Settings: React.FC<SettingsProps> = ({ onLogout, onRequestCalendarAccess }) => {
   // Get user data from localStorage for pre-filling form
   const userEmail = localStorage.getItem('email');
-  const userName = localStorage.getItem('name');
+  const userName = localStorage.getItem('user_name');
   const emailVerified = localStorage.getItem('email_verified') === 'true';
   const calendarAccess = localStorage.getItem('calendar_access') === 'true';
 

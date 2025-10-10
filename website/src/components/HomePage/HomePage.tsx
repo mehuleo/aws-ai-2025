@@ -150,8 +150,8 @@ class HomePage extends Component<HomePageProps, HomePageState> {
           <img src={logo} alt="Logo" className="home-logo" />
           {isAuthenticated ? (
             <div className="user-info">
-              <img src={user.picture} alt={user.name} className="user-avatar" />
-              <span className="user-name">{user.name}</span>
+              <img src={user.picture} alt={user.user_name} className="user-avatar" />
+              <span className="user-name">{user.user_name}</span>
               <button className="logout-button" onClick={this.handleLogout}>
                 Logout
               </button>
@@ -169,7 +169,7 @@ class HomePage extends Component<HomePageProps, HomePageState> {
           <section className="home-content">
             <h1 className="home-title">
               {isAuthenticated 
-                ? `Welcome back, ${user.name}!` 
+                ? `Welcome back, ${user.user_name}!` 
                 : 'Hang out with friends, co-workers, and even AI — all in one place!'
               }
             </h1>

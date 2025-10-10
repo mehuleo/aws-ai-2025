@@ -82,6 +82,9 @@ def verify_google_token(token):
                 logger.error(error_msg)
                 return None, "Token has expired"
             
+            # Add user_name field for compatibility (same as name from Google)
+            token_info['user_name'] = token_info.get('name', '')
+            
             logger.info(f"Token verified for user: {token_info.get('email', 'unknown')}")
             return token_info, None
         
@@ -149,19 +152,17 @@ def store_user_in_dynamodb(dynamodb_table, user_info, access_token=None):
         # Check if user already exists
         existing_user, error = get_user_from_dynamodb(dynamodb_table, email)
         
+        # Generate new SID for new user
+        new_sid = str(uuid.uuid4())
+        
         if existing_user:
             # User exists, update the record
             logger.info(f"Updating existing user: {email}")
             
-            # Generate new SID for update
-            new_sid = str(uuid.uuid4())
-            
             # Prepare update data
             update_data = {
-                'email': email,  # Primary key
-                'sid': new_sid,  # Sort key (refresh with new SID)
                 'userId': user_id,
-                'name': user_info.get('name', ''),
+                'user_name': user_info.get('user_name', ''),
                 'picture': user_info.get('picture', ''),
                 'email_verified': user_info.get('email_verified', False),
                 'last_login': datetime.utcnow().isoformat()
@@ -176,25 +177,42 @@ def store_user_in_dynamodb(dynamodb_table, user_info, access_token=None):
                 ).isoformat()
                 update_data['calendar_access'] = True
             else:
+                update_data['google_access_token'] = None
+                update_data['refresh_token'] = None
+                update_data['token_expires_at'] = None
                 update_data['calendar_access'] = False
             
-            # Update the item using email as primary key and sid as sort key
-            dynamodb_table.put_item(Item=update_data)
+            # Update the item using email as primary key
+            dynamodb_table.update_item(
+                Key={
+                    'email': email
+                },
+                UpdateExpression='SET sid = :new_sid, userId = :userId, user_name = :user_name, picture = :picture, email_verified = :email_verified, last_login = :last_login, google_access_token = :google_access_token, refresh_token = :refresh_token, token_expires_at = :token_expires_at, calendar_access = :calendar_access',
+                ExpressionAttributeValues={
+                    ':new_sid': new_sid,
+                    ':userId': update_data['userId'],
+                    ':user_name': update_data['user_name'],
+                    ':picture': update_data['picture'],
+                    ':email_verified': update_data['email_verified'],
+                    ':last_login': update_data['last_login'],
+                    ':google_access_token': update_data.get('google_access_token', ''),
+                    ':refresh_token': update_data.get('refresh_token', ''),
+                    ':token_expires_at': update_data.get('token_expires_at', ''),
+                    ':calendar_access': update_data.get('calendar_access', False)
+                }
+            )
             logger.info(f"User data updated for: {email} with new SID: {new_sid}")
             
         else:
             # User doesn't exist, create new record
             logger.info(f"Creating new user: {email}")
             
-            # Generate new SID for new user
-            new_sid = str(uuid.uuid4())
-            
             # Prepare user data
             user_data = {
                 'email': email,  # Primary key
-                'sid': new_sid,  # Sort key
+                'sid': new_sid,
                 'userId': user_id,
-                'name': user_info.get('name', ''),
+                'user_name': user_info.get('user_name', ''),
                 'picture': user_info.get('picture', ''),
                 'email_verified': user_info.get('email_verified', False),
                 'last_login': datetime.utcnow().isoformat(),
@@ -210,6 +228,9 @@ def store_user_in_dynamodb(dynamodb_table, user_info, access_token=None):
                 ).isoformat()
                 user_data['calendar_access'] = True
             else:
+                user_data['google_access_token'] = None
+                user_data['refresh_token'] = None
+                user_data['token_expires_at'] = None
                 user_data['calendar_access'] = False
             
             # Store in DynamoDB
@@ -307,7 +328,7 @@ def validateGoogleAuth(event, context):
                 'user': {
                     'sid': stored_user_data.get('sid') if stored_user_data else None,
                     'email': user_info.get('email'),
-                    'name': user_info.get('name'),
+                    'user_name': user_info.get('user_name'),
                     'picture': user_info.get('picture'),
                     'email_verified': user_info.get('email_verified', False)
                 }
@@ -405,7 +426,7 @@ def validateGoogleAuth(event, context):
                     'id': user_data.get('userId'),
                     'sid': user_data.get('sid'),
                     'email': user_data.get('email'),
-                    'name': user_data.get('name'),
+                    'user_name': user_data.get('user_name'),
                     'picture': user_data.get('picture'),
                     'email_verified': user_data.get('email_verified', False),
                     'calendar_access': user_data.get('calendar_access', False)

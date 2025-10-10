@@ -120,8 +120,8 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
       if (user.sid) {
         localStorage.setItem('sid', user.sid);
       }
-      if (user.name) {
-        localStorage.setItem('name', user.name);
+      if (user.user_name) {
+        localStorage.setItem('user_name', user.user_name);
       }
       if (user.picture) {
         localStorage.setItem('picture', user.picture);
