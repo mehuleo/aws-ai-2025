@@ -162,34 +162,36 @@ def lookup_subscribers(dynamodb, parsed_email):
     # Bulk lookup using batch_get_item
     try:
         # Build the request items for batch_get_item
-        keys = [{'emailId': email_id} for email_id in email_addresses]
+        # Note: Since we now have email as primary key and sid as sort key,
+        # we need to query each email individually or use a different approach
+        # For now, we'll use individual queries since batch_get_item requires both keys
         
-        # DynamoDB batch_get_item requires the client, not resource
-        dynamodb_client = boto3.client('dynamodb')
+        # DynamoDB resource for queries
+        dynamodb_table = dynamodb.Table(SUBSCRIBERS_TABLE_NAME)
         
-        # Use batch_get_item (max 100 items per request)
         subscribers = []
-        # Process in chunks of 100 (DynamoDB limit)
-        for i in range(0, len(keys), 100):
-            batch_keys = keys[i:i+100]
-            response = dynamodb_client.batch_get_item(
-                RequestItems={
-                    SUBSCRIBERS_TABLE_NAME: {
-                        'Keys': [{'emailId': {'S': key['emailId']}} for key in batch_keys]
+        # Query each email individually
+        for email in email_addresses:
+            try:
+                response = dynamodb_table.query(
+                    KeyConditionExpression='email = :email',
+                    ExpressionAttributeValues={
+                        ':email': email
                     }
-                }
-            )
-            
-            # Extract email IDs from the response
-            if SUBSCRIBERS_TABLE_NAME in response.get('Responses', {}):
-                for item in response['Responses'][SUBSCRIBERS_TABLE_NAME]:
-                    if 'emailId' in item:
-                        subscribers.append(item['emailId']['S'])
+                )
+                
+                if response['Items']:
+                    # Add the email to subscribers list if found
+                    subscribers.append(email)
+                    
+            except Exception as e:
+                print(f"Error querying for email {email}: {str(e)}")
+                continue
         
         return subscribers
         
     except Exception as e:
-        print(f"Error looking up subscribers in bulk: {str(e)}")
+        print(f"Error looking up subscribers: {str(e)}")
         return []
 
 

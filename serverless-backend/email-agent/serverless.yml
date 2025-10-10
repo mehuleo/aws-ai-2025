@@ -7,14 +7,22 @@ provider:
   name: aws
   runtime: python3.12
   deploymentBucket: serverless-email-agent
+  stage: prod
   environment:
     S3_BUCKET_NAME: ${file(./serverless-config.yml):S3_BUCKET_NAME}
     EMAILS_TABLE_NAME: ${file(./serverless-config.yml):EMAILS_TABLE_NAME}
     SUBSCRIBERS_TABLE_NAME: ${file(./serverless-config.yml):SUBSCRIBERS_TABLE_NAME}
+    GOOGLE_CLIENT_ID: ${file(./serverless-config.yml):GOOGLE_CLIENT_ID}
+    GOOGLE_CLIENT_SECRET: ${file(./serverless-config.yml):GOOGLE_CLIENT_SECRET}
 
 functions:
   ping:
     handler: health.ping
+    events:
+      - http:
+          path: v1/health
+          method: get
+          cors: true
   parseEmail:
     handler: email_utils.parseEmail
     iamRoleStatements:
@@ -36,6 +44,23 @@ functions:
           - dynamodb:Scan
         Resource: 
           - "arn:aws:dynamodb:*:*:table/${file(./serverless-config.yml):EMAILS_TABLE_NAME}"
+          - "arn:aws:dynamodb:*:*:table/${file(./serverless-config.yml):SUBSCRIBERS_TABLE_NAME}"
+  validateGoogleAuth:
+    handler: google_auth.validateGoogleAuth
+    events:
+      - http:
+          path: v1/validateGoogleAuth
+          method: post
+          cors: true
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:PutItem
+          - dynamodb:GetItem
+          - dynamodb:UpdateItem
+          - dynamodb:Query
+          - dynamodb:Scan
+        Resource: 
           - "arn:aws:dynamodb:*:*:table/${file(./serverless-config.yml):SUBSCRIBERS_TABLE_NAME}"
 
 resources:
