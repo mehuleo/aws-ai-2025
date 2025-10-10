@@ -16,14 +16,6 @@ EMAILS_TABLE_NAME = os.environ.get('EMAILS_TABLE_NAME')
 SUBSCRIBERS_TABLE_NAME = os.environ.get('SUBSCRIBERS_TABLE_NAME')
 
 
-def hello(event, context):
-    """Health check endpoint"""
-    body = {
-        "message": "Go Serverless v4.0! Your function executed successfully!"
-    }
-    return {"statusCode": 200, "body": json.dumps(body)}
-
-
 def extract_ses_metadata(event):
     """Extract metadata from SES event"""
     ses_record = event['Records'][0]['ses']

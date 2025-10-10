@@ -13,10 +13,10 @@ provider:
     SUBSCRIBERS_TABLE_NAME: ${file(./serverless-config.yml):SUBSCRIBERS_TABLE_NAME}
 
 functions:
-  hello:
-    handler: handler.hello
+  ping:
+    handler: health.ping
   parseEmail:
-    handler: handler.parseEmail
+    handler: email_utils.parseEmail
     iamRoleStatements:
       - Effect: Allow
         Action:
