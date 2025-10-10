@@ -1,0 +1,60 @@
+.google-login-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.google-login-button-wrapper {
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.google-login-button-wrapper:hover {
+  opacity: 0.8;
+}
+
+.google-login-button-wrapper:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.google-login-loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #666;
+  font-size: 14px;
+}
+
+.loading-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #f3f3f3;
+  border-top: 2px solid #4285f4;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Override Google's default button styles if needed */
+.google-login-button-wrapper iframe {
+  border-radius: 8px !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .google-login-button-wrapper {
+    width: 100%;
+    max-width: 300px;
+  }
+  
+  .google-login-button-wrapper iframe {
+    width: 100% !important;
+  }
+}
