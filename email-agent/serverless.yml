@@ -1,0 +1,49 @@
+# "org" ensures this Service is used with the correct Serverless Framework Access Key.
+org: condor
+# "service" is the name of this project. This will also be added to your AWS resource names.
+service: email-agent
+
+provider:
+  name: aws
+  runtime: python3.12
+  deploymentBucket: serverless-email-agent
+  environment:
+    S3_BUCKET_NAME: ${file(./serverless-config.yml):S3_BUCKET_NAME}
+    EMAILS_TABLE_NAME: ${file(./serverless-config.yml):EMAILS_TABLE_NAME}
+    SUBSCRIBERS_TABLE_NAME: ${file(./serverless-config.yml):SUBSCRIBERS_TABLE_NAME}
+
+functions:
+  hello:
+    handler: handler.hello
+  parseEmail:
+    handler: handler.parseEmail
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - s3:GetObject
+          - s3:ListBucket
+        Resource: "*"
+      - Effect: Allow
+        Action:
+          - ses:*
+        Resource: "*"
+      - Effect: Allow
+        Action:
+          - dynamodb:PutItem
+          - dynamodb:GetItem
+          - dynamodb:UpdateItem
+          - dynamodb:Query
+          - dynamodb:Scan
+        Resource: 
+          - "arn:aws:dynamodb:*:*:table/${file(./serverless-config.yml):EMAILS_TABLE_NAME}"
+          - "arn:aws:dynamodb:*:*:table/${file(./serverless-config.yml):SUBSCRIBERS_TABLE_NAME}"
+
+resources:
+  Resources:
+    ParseEmailLambdaPermission:
+      Type: AWS::Lambda::Permission
+      Properties:
+        FunctionName:
+          Ref: ParseEmailLambdaFunction
+        Action: lambda:InvokeFunction
+        Principal: ses.amazonaws.com

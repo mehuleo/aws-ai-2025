@@ -1,0 +1,4 @@
+S3_BUCKET_NAME: your-s3-bucket-name
+EMAILS_TABLE_NAME: your-emails-table-name
+SUBSCRIBERS_TABLE_NAME: your-subscribers-table-name
+
