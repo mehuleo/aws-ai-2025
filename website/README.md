@@ -53,39 +53,66 @@ website/
 
 ### Component Standards
 
-#### Class-Based Components
+#### Class-Based Components (REQUIRED)
 
-All components must follow the class-based structure:
+**ALL React components MUST use class-based structure.** Functional components are NOT allowed in this codebase.
 
 ```typescript
 import React, { Component } from 'react';
 import './ComponentName.css';
 
 interface ComponentNameProps {
-  // Props interface
+  // Props interface - ALWAYS define
+  title: string;
+  onAction?: (value: string) => void;
 }
 
 interface ComponentNameState {
-  // State interface
+  // State interface - ALWAYS define
+  isLoading: boolean;
+  data: string[];
 }
 
 class ComponentName extends Component<ComponentNameProps, ComponentNameState> {
   constructor(props: ComponentNameProps) {
     super(props);
     this.state = {
-      // Initial state
+      // ALWAYS initialize state in constructor
+      isLoading: false,
+      data: []
     };
   }
 
-  // Named methods (NO arrow functions)
+  // Lifecycle methods
+  componentDidMount(): void {
+    // Component mounted logic
+  }
+
+  componentDidUpdate(prevProps: ComponentNameProps, prevState: ComponentNameState): void {
+    // Component updated logic
+  }
+
+  // Named methods with explicit return types (NO arrow functions)
   handleAction(): void {
     // Method logic
   }
 
-  render() {
+  async fetchData(): Promise<void> {
+    // Async method logic
+  }
+
+  render(): React.JSX.Element {
+    const { title } = this.props;
+    const { isLoading, data } = this.state;
+
     return (
       <div className="component-name">
-        {/* Component JSX */}
+        <h1>{title}</h1>
+        {isLoading ? (
+          <div>Loading...</div>
+        ) : (
+          <div>{data.map(item => <span key={item}>{item}</span>)}</div>
+        )}
       </div>
     );
   }
@@ -94,43 +121,97 @@ class ComponentName extends Component<ComponentNameProps, ComponentNameState> {
 export default ComponentName;
 ```
 
-#### Key Rules
+#### MANDATORY Rules
 
-1. **NO Arrow Functions**: Always use named methods instead of arrow functions
+1. **NO Functional Components**: All components MUST be class-based
    ```typescript
-   // ❌ DON'T
+   // ❌ FORBIDDEN
+   const MyComponent = () => { return <div>Hello</div>; }
+   
+   // ✅ REQUIRED
+   class MyComponent extends Component {
+     render(): React.JSX.Element {
+       return <div>Hello</div>;
+     }
+   }
+   ```
+
+2. **NO Arrow Functions**: Always use named methods with explicit return types
+   ```typescript
+   // ❌ FORBIDDEN
    handleClick = () => { }
    
-   // ✅ DO
+   // ✅ REQUIRED
    handleClick(): void { }
    ```
 
-2. **Type Everything**: Define interfaces for props and state
+3. **ALWAYS Define Interfaces**: Props and State interfaces are mandatory
    ```typescript
-   interface Props {
-     title: string;
-     count: number;
-   }
+   // ❌ FORBIDDEN
+   class Component extends Component<any, any> { }
    
-   interface State {
-     isOpen: boolean;
-   }
+   // ✅ REQUIRED
+   interface Props { title: string; }
+   interface State { count: number; }
+   class Component extends Component<Props, State> { }
    ```
 
-3. **Constructor Pattern**: Always initialize state in constructor
+4. **Constructor Pattern**: Always initialize state in constructor
    ```typescript
    constructor(props: Props) {
      super(props);
      this.state = {
-       isOpen: false
+       count: 0
      };
    }
    ```
 
-4. **Event Handlers**: Bind methods inline or use named methods with explicit return types
+5. **Explicit Return Types**: All methods must have explicit return types
+   ```typescript
+   // ✅ REQUIRED
+   handleClick(): void { }
+   getData(): string[] { }
+   async fetchData(): Promise<void> { }
+   render(): React.JSX.Element { }
+   ```
+
+6. **Event Handlers**: Use inline arrow functions for event binding
    ```typescript
    <button onClick={() => this.handleClick()}>Click</button>
    ```
+
+7. **Refs**: Use React.createRef() for refs
+   ```typescript
+   private inputRef = React.createRef<HTMLInputElement>();
+   
+   componentDidMount(): void {
+     this.inputRef.current?.focus();
+   }
+   ```
+
+#### Exceptions
+
+**Third-party UI Components**: Components in `src/components/ui/` (like Radix UI components) may use functional components with hooks as they are external library components. These should NOT be modified to follow class component standards.
+
+**Example of acceptable third-party pattern**:
+```typescript
+// ✅ ACCEPTABLE for ui/ components only
+const SidebarTrigger = React.forwardRef<HTMLButtonElement, React.ComponentProps<"button">>(
+  ({ className, onClick, ...props }, ref) => {
+    const { toggleSidebar } = useSidebar();
+    return (
+      <button
+        ref={ref}
+        onClick={(event) => {
+          onClick?.(event);
+          toggleSidebar();
+        }}
+        {...props}
+      />
+    );
+  }
+);
+```
 
 ### File Organization
 
@@ -281,10 +362,52 @@ The `build` folder will contain the optimized production build ready for deploym
 
 1. Create a new directory under `src/components/`
 2. Create `ComponentName.tsx` and `ComponentName.css`
-3. Follow the class-based component structure
-4. Define Props and State interfaces
-5. Use named methods, not arrow functions
-6. Import and use in parent component
+3. **MUST use class-based component structure** (NO functional components)
+4. **MUST define Props and State interfaces**
+5. **MUST use named methods with explicit return types** (NO arrow functions)
+6. **MUST initialize state in constructor**
+7. Import and use in parent component
+
+**Template for new components**:
+```typescript
+import React, { Component } from 'react';
+import './ComponentName.css';
+
+interface ComponentNameProps {
+  // Define props here
+}
+
+interface ComponentNameState {
+  // Define state here
+}
+
+class ComponentName extends Component<ComponentNameProps, ComponentNameState> {
+  constructor(props: ComponentNameProps) {
+    super(props);
+    this.state = {
+      // Initialize state here
+    };
+  }
+
+  componentDidMount(): void {
+    // Lifecycle logic here
+  }
+
+  handleAction(): void {
+    // Named methods with explicit return types
+  }
+
+  render(): React.JSX.Element {
+    return (
+      <div className="component-name">
+        {/* Component JSX */}
+      </div>
+    );
+  }
+}
+
+export default ComponentName;
+```
 
 ### Adding a New Page
 
@@ -348,12 +471,21 @@ The `build` folder will contain the optimized production build ready for deploym
 
 ## 🤝 Contributing
 
-1. Follow the established code standards
-2. Use class components with named methods
-3. Write TypeScript with explicit types
-4. Keep components modular and reusable
-5. Test on multiple browsers and devices
-6. Update documentation as needed
+1. **MANDATORY**: Follow the established code standards
+2. **MANDATORY**: Use class components with named methods (NO functional components)
+3. **MANDATORY**: Write TypeScript with explicit types and interfaces
+4. **MANDATORY**: Use named methods with explicit return types (NO arrow functions)
+5. Keep components modular and reusable
+6. Test on multiple browsers and devices
+7. Update documentation as needed
+
+**Code Review Checklist**:
+- [ ] Component uses class-based structure
+- [ ] Props and State interfaces are defined
+- [ ] All methods have explicit return types
+- [ ] No arrow functions used for class methods
+- [ ] State is initialized in constructor
+- [ ] TypeScript types are properly defined
 
 ## 📄 License
 

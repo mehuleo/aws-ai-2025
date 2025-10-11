@@ -3,18 +3,36 @@ import './HomePage.css';
 import logo from '../../assets/images/logo.png';
 import hero from '../../assets/images/hero.png';
 import GoogleLoginButton from '../GoogleLoginButton/GoogleLoginButton';
+import { Route } from '../../constants/routes';
 
 interface HomePageProps {}
 
 class HomePage extends Component<HomePageProps> {
   componentDidMount() {
-    // Static landing page - no authentication needed
+    // Check for Google Auth redirect parameters
+    this.checkForAuthRedirect();
+  }
+
+  checkForAuthRedirect = () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const state = urlParams.get('state');
+    const code = urlParams.get('code');
+    const scope = urlParams.get('scope');
+    const error = urlParams.get('error');
+
+    // If we have Google Auth parameters, redirect to dashboard calendars with OAuth parameters
+    if (state || code || scope || error) {
+      console.log('Google Auth redirect detected:', { state, code, scope, error });
+      // Redirect to dashboard calendars page and preserve the OAuth parameters
+      const redirectUrl = `${Route.dashboard.calendars}?${urlParams.toString()}`;
+      window.location.href = redirectUrl;
+    }
   }
 
   handleLoginSuccess = (user: any) => {
     console.log('Login successful:', user);
-    // Redirect to dashboard after successful login
-    window.location.href = '/dashboard';
+    // Redirect to dashboard settings after successful login
+    window.location.href = Route.dashboard.settings;
   };
 
   handleTokenResponse = (response: any) => {

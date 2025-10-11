@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Sidebar,
   SidebarContent,
@@ -14,11 +15,13 @@ import {
   SidebarInset,
   SidebarSeparator,
 } from '../ui/sidebar';
-import { Settings, Sliders, LogOut, User } from 'lucide-react';
+import { Settings, Sliders, LogOut, User, Calendar } from 'lucide-react';
 import logoImage from '../../assets/images/logo.png';
 import SettingsComponent from './Settings';
 import CustomizeAgent from './CustomizeAgent';
+import LinkCalendars from './LinkCalendars';
 import './Dashboard.css';
+import { Route, DashboardSection, validDashboardSections } from '../../constants/routes';
 
 // Extend Window interface to include Google Identity Services
 declare global {
@@ -27,10 +30,13 @@ declare global {
   }
 }
 
-interface DashboardProps {}
+interface DashboardProps {
+  navigate?: any;
+  location?: any;
+}
 
 interface DashboardState {
-  activeSection: string;
+  activeSection: DashboardSection;
   isAuthenticated: boolean;
   user: any;
   isLoading: boolean;
@@ -48,7 +54,16 @@ class Dashboard extends Component<DashboardProps, DashboardState> {
   }
 
   componentDidMount(): void {
+    console.debug('Dashboard component mounted');
+    this.initializeSectionFromURL();
     this.checkAuthentication();
+  }
+
+  componentDidUpdate(prevProps: DashboardProps): void {
+    // Update active section when location changes
+    if (prevProps.location?.pathname !== this.props.location?.pathname) {
+      this.initializeSectionFromURL();
+    }
   }
 
   async checkAuthentication(): Promise<void> {
@@ -131,36 +146,39 @@ class Dashboard extends Component<DashboardProps, DashboardState> {
     }
   }
 
-  handleSectionChange(section: string): void {
+  handleSectionChange(section: DashboardSection): void {
+    const { navigate } = this.props;
     this.setState({ activeSection: section });
+    
+    // Navigate to the appropriate path
+    const pathMap: Record<DashboardSection, string> = {
+      'settings': Route.dashboard.settings,
+      'customize': Route.dashboard.customize,
+      'calendars': Route.dashboard.calendars,
+    };
+    
+    if (navigate) {
+      navigate(pathMap[section]);
+    }
   }
 
-  async requestCalendarAccess(): Promise<void> {
-    try {
-      const { user } = this.state;
-      if (!user) return;
-
-      const response = await fetch('https://api.superagent.diy/v1/validateGoogleAuth', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          action: 'get_calendar_access',
-          email: user.email,
-          redirect_uri: window.location.origin + '/dashboard'
-        })
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success && data.oauth_url) {
-          // Redirect to Google OAuth for calendar access
-          window.location.href = data.oauth_url;
-        }
-      }
-    } catch (error) {
-      console.error('Error requesting calendar access:', error);
+  initializeSectionFromURL(): void {
+    const { location } = this.props;
+    const pathname = location?.pathname || window.location.pathname;
+    
+    // Extract section from pathname: /dashboard/settings -> settings
+    const pathParts = pathname.split('/').filter(Boolean);
+    const section = pathParts[pathParts.length - 1];
+    
+    console.log('Current pathname:', pathname);
+    console.log('Extracted section:', section);
+    
+    if (section && validDashboardSections.includes(section as DashboardSection)) {
+      console.log('Section is valid:', section);
+      this.setState({ activeSection: section as DashboardSection });
+    } else {
+      // Default to settings if path doesn't match
+      this.setState({ activeSection: 'settings' });
     }
   }
 
@@ -183,7 +201,7 @@ class Dashboard extends Component<DashboardProps, DashboardState> {
     }
     
     // Redirect to home page
-    window.location.href = '/';
+    window.location.href = Route.home;
   }
 
 
@@ -241,6 +259,16 @@ class Dashboard extends Component<DashboardProps, DashboardState> {
                   >
                     <Sliders className="w-5 h-5" />
                     <span>Customize Agent</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    onClick={() => this.handleSectionChange('calendars')}
+                    isActive={activeSection === 'calendars'}
+                    className={activeSection === 'calendars' ? 'bg-purple-100 text-purple-600 font-semibold border-r-4 border-purple-600' : 'text-gray-600 hover:bg-gray-100 hover:text-purple-600'}
+                  >
+                    <Calendar className="w-5 h-5" />
+                    <span>Link Calendars</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               </SidebarMenu>
@@ -320,10 +348,11 @@ class Dashboard extends Component<DashboardProps, DashboardState> {
               {activeSection === 'settings' && (
                 <SettingsComponent 
                   onLogout={this.handleLogout}
-                  onRequestCalendarAccess={this.requestCalendarAccess}
+                  onNavigateToCalendars={() => this.handleSectionChange('calendars')}
                 />
               )}
               {activeSection === 'customize' && <CustomizeAgent />}
+              {activeSection === 'calendars' && <LinkCalendars />}
             </main>
           </SidebarInset>
         </div>
@@ -332,5 +361,14 @@ class Dashboard extends Component<DashboardProps, DashboardState> {
   }
 }
 
-export default Dashboard;
+// HOC to inject navigate and location into class component
+function withRouter(Component: typeof Dashboard) {
+  return function WrappedComponent(props: any) {
+    const navigate = useNavigate();
+    const location = useLocation();
+    return <Component {...props} navigate={navigate} location={location} />;
+  };
+}
+
+export default withRouter(Dashboard);
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { Component, RefObject } from 'react';
 import './GoogleLoginButton.css';
 
 // Extend Window interface to include Google Identity Services
@@ -15,19 +15,26 @@ interface GoogleLoginButtonProps {
   disabled?: boolean;
 }
 
-const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
-  onLoginSuccess,
-  onTokenResponse,
-  isLoading = false,
-  disabled = false
-}) => {
-  const buttonRef = useRef<HTMLDivElement>(null);
+interface GoogleLoginButtonState {
+  isLoading: boolean;
+}
 
-  useEffect(() => {
-    initializeGoogleAuth();
-  }, []);
+class GoogleLoginButton extends Component<GoogleLoginButtonProps, GoogleLoginButtonState> {
+  private buttonRef: RefObject<HTMLDivElement | null>;
 
-  const validateTokenWithBackend = async (token: string): Promise<any> => {
+  constructor(props: GoogleLoginButtonProps) {
+    super(props);
+    this.state = {
+      isLoading: props.isLoading || false
+    };
+    this.buttonRef = React.createRef<HTMLDivElement | null>();
+  }
+
+  componentDidMount(): void {
+    this.initializeGoogleAuth();
+  }
+
+  validateTokenWithBackend = async (token: string): Promise<any> => {
     try {
       const response = await fetch('https://api.superagent.diy/v1/validateGoogleAuth', {
         method: 'POST',
@@ -57,7 +64,7 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
     }
   };
 
-  const initializeGoogleAuth = () => {
+  initializeGoogleAuth = (): void => {
     if (window.google) {
       const clientId = process.env.REACT_APP_GOOGLE_CLIENT_ID;
       console.log('Google Client ID:', clientId ? 'Set' : 'Not set');
@@ -70,23 +77,23 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
       // Initialize Google Identity Services
       window.google.accounts.id.initialize({
         client_id: clientId,
-        callback: handleCredentialResponse,
+        callback: this.handleCredentialResponse,
         auto_select: false,
         cancel_on_tap_outside: true
       });
 
       // Configure OAuth scope for additional permissions
-      if (onTokenResponse) {
+      if (this.props.onTokenResponse) {
         window.google.accounts.oauth2.initTokenClient({
           client_id: clientId,
           scope: 'email profile https://www.googleapis.com/auth/calendar',
-          callback: onTokenResponse
+          callback: this.props.onTokenResponse
         });
       }
 
       // Render the Google Sign-In button
-      if (buttonRef.current) {
-        window.google.accounts.id.renderButton(buttonRef.current, {
+      if (this.buttonRef.current) {
+        window.google.accounts.id.renderButton(this.buttonRef.current, {
           theme: 'outline',
           size: 'large',
           width: 250,
@@ -98,11 +105,11 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
       console.log('Google Identity Services initialized successfully');
     } else {
       // Retry if Google script hasn't loaded yet
-      setTimeout(initializeGoogleAuth, 100);
+      setTimeout(this.initializeGoogleAuth, 100);
     }
   };
 
-  const handleCredentialResponse = async (response: any) => {
+  handleCredentialResponse = async (response: any): Promise<void> => {
     console.log('Received credential response:', response);
     
     try {
@@ -111,7 +118,7 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
       }
 
       // Validate token with backend
-      const user = await validateTokenWithBackend(response.credential);
+      const user = await this.validateTokenWithBackend(response.credential);
       
       // Store specific user data fields in localStorage
       if (user.email) {
@@ -137,10 +144,10 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
       localStorage.setItem('user', JSON.stringify(user));
       
       // Call the parent component's success handler with user data
-      onLoginSuccess(user);
+      this.props.onLoginSuccess(user);
       
       // Also request OAuth token for additional scopes if callback is provided
-      if (onTokenResponse && window.google) {
+      if (this.props.onTokenResponse && window.google) {
         console.log('Requesting OAuth access token...');
         try {
           window.google.accounts.oauth2.requestAccessToken();
@@ -155,8 +162,8 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
     }
   };
 
-  const handleGoogleLogin = () => {
-    if (window.google && !disabled && !isLoading) {
+  handleGoogleLogin = (): void => {
+    if (window.google && !this.props.disabled && !this.props.isLoading) {
       console.log('Attempting Google login...');
       try {
         // Trigger the Google Sign-In prompt
@@ -169,21 +176,25 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
     }
   };
 
-  return (
-    <div className="google-login-container">
-      <div 
-        ref={buttonRef} 
-        className="google-login-button-wrapper"
-        onClick={handleGoogleLogin}
-      />
-      {isLoading && (
-        <div className="google-login-loading">
-          <div className="loading-spinner" />
-          <span>Signing in...</span>
-        </div>
-      )}
-    </div>
-  );
-};
+  render(): React.JSX.Element {
+    const { isLoading } = this.props;
+
+    return (
+      <div className="google-login-container">
+        <div 
+          ref={this.buttonRef} 
+          className="google-login-button-wrapper"
+          onClick={this.handleGoogleLogin}
+        />
+        {isLoading && (
+          <div className="google-login-loading">
+            <div className="loading-spinner" />
+            <span>Signing in...</span>
+          </div>
+        )}
+      </div>
+    );
+  }
+}
 
 export default GoogleLoginButton;

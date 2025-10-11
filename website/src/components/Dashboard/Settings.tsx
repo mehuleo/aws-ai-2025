@@ -2,10 +2,10 @@ import React from 'react';
 
 interface SettingsProps {
   onLogout: () => void;
-  onRequestCalendarAccess: () => void;
+  onNavigateToCalendars: () => void;
 }
 
-const Settings: React.FC<SettingsProps> = ({ onLogout, onRequestCalendarAccess }) => {
+const Settings: React.FC<SettingsProps> = ({ onLogout, onNavigateToCalendars }) => {
   // Get user data from localStorage for pre-filling form
   const userEmail = localStorage.getItem('email');
   const userName = localStorage.getItem('user_name');
@@ -52,9 +52,9 @@ const Settings: React.FC<SettingsProps> = ({ onLogout, onRequestCalendarAccess }
             <div className="flex items-center gap-3">
               <button 
                 className="settings-button secondary"
-                onClick={onRequestCalendarAccess}
+                onClick={onNavigateToCalendars}
               >
-                {calendarAccess ? 'Manage Permissions' : 'Grant Calendar Access'}
+                {calendarAccess ? 'Manage Calendars' : 'Link Calendar'}
               </button>
               {calendarAccess && (
                 <div className="flex items-center gap-2">
