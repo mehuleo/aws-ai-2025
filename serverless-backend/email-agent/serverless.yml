@@ -16,6 +16,7 @@ provider:
     GOOGLE_CLIENT_ID: ${file(./serverless-config.yml):GOOGLE_CLIENT_ID}
     GOOGLE_CLIENT_SECRET: ${file(./serverless-config.yml):GOOGLE_CLIENT_SECRET}
     GOOGLE_AUTH_REDIRECT_URI: ${file(./serverless-config.yml):GOOGLE_AUTH_REDIRECT_URI}
+    AGENT_RUNTIME_ARN: ${file(./serverless-config.yml):AGENT_RUNTIME_ARN}
 
 functions:
   ping:
@@ -64,6 +65,18 @@ functions:
           - dynamodb:Scan
         Resource: 
           - "arn:aws:dynamodb:*:*:table/${file(./serverless-config.yml):SUBSCRIBERS_TABLE_NAME}"
+  testInvoke:
+    handler: agent.test_invoke
+    events:
+      - http:
+          path: v1/test-invoke
+          method: post
+          cors: true
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - bedrock-agentcore:InvokeAgentRuntime
+        Resource: "*"
 
 resources:
   Resources:
