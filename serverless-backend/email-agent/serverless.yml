@@ -8,12 +8,14 @@ provider:
   runtime: python3.12
   deploymentBucket: serverless-email-agent
   stage: prod
+  memorySize: 256
   environment:
     S3_BUCKET_NAME: ${file(./serverless-config.yml):S3_BUCKET_NAME}
     EMAILS_TABLE_NAME: ${file(./serverless-config.yml):EMAILS_TABLE_NAME}
     SUBSCRIBERS_TABLE_NAME: ${file(./serverless-config.yml):SUBSCRIBERS_TABLE_NAME}
     GOOGLE_CLIENT_ID: ${file(./serverless-config.yml):GOOGLE_CLIENT_ID}
     GOOGLE_CLIENT_SECRET: ${file(./serverless-config.yml):GOOGLE_CLIENT_SECRET}
+    GOOGLE_AUTH_REDIRECT_URI: ${file(./serverless-config.yml):GOOGLE_AUTH_REDIRECT_URI}
 
 functions:
   ping:
