@@ -489,7 +489,7 @@ export default ComponentName;
 
 ## 📄 License
 
-This project is private and proprietary.
+This project is licensed under the GNU AFFERO GENERAL PUBLIC LICENSE.
 
 ## 👥 Team
 

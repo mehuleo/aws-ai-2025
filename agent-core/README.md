@@ -167,7 +167,7 @@ CMD ["python", "test-agent.py"]
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the GNU AFFERO GENERAL PUBLIC LICENSE - see the LICENSE file for details.
 
 ## Support
 
