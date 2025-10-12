@@ -1,7 +1,7 @@
 # "org" ensures this Service is used with the correct Serverless Framework Access Key.
 org: condor
 # "service" is the name of this project. This will also be added to your AWS resource names.
-service: email-agent
+service: email-agent-services
 
 provider:
   name: aws
@@ -18,16 +18,40 @@ provider:
     GOOGLE_AUTH_REDIRECT_URI: ${file(./serverless-config.yml):GOOGLE_AUTH_REDIRECT_URI}
     AGENT_RUNTIME_ARN: ${file(./serverless-config.yml):AGENT_RUNTIME_ARN}
 
+plugins:
+  - serverless-python-requirements
+
+custom:
+  pythonRequirements:
+    dockerizePip: true
+    slim: true
+    layer:
+      enable: true
+
+package:
+  individually: true
+
+layers:
+  googleDeps:
+    path: layers/google_deps
+    name: google-deps-layer
+    description: "Google CalendarAPI client dependencies"
+    compatibleRuntimes:
+      - python3.12
+
 functions:
   ping:
-    handler: health.ping
+    handler: functions/health/health.ping
     events:
       - http:
           path: v1/health
           method: get
           cors: true
+    package:
+      include:
+        - functions/health/**
   parseEmail:
-    handler: email_utils.parseEmail
+    handler: functions/utils/email_utils.parseEmail
     iamRoleStatements:
       - Effect: Allow
         Action:
@@ -48,8 +72,11 @@ functions:
         Resource: 
           - "arn:aws:dynamodb:*:*:table/${file(./serverless-config.yml):EMAILS_TABLE_NAME}"
           - "arn:aws:dynamodb:*:*:table/${file(./serverless-config.yml):SUBSCRIBERS_TABLE_NAME}"
+    package:
+      include:
+        - functions/utils/**
   validateGoogleAuth:
-    handler: google_auth.validateGoogleAuth
+    handler: functions/auth/google_auth.validateGoogleAuth
     events:
       - http:
           path: v1/validateGoogleAuth
@@ -65,8 +92,11 @@ functions:
           - dynamodb:Scan
         Resource: 
           - "arn:aws:dynamodb:*:*:table/${file(./serverless-config.yml):SUBSCRIBERS_TABLE_NAME}"
+    package:
+      include:
+        - functions/auth/**
   testInvoke:
-    handler: agent.test_invoke
+    handler: functions/intelligence/agent_test.test_invoke
     events:
       - http:
           path: v1/test-invoke
@@ -77,6 +107,9 @@ functions:
         Action:
           - bedrock-agentcore:InvokeAgentRuntime
         Resource: "*"
+    package:
+      include:
+        - functions/intelligence/**
 
 resources:
   Resources:
