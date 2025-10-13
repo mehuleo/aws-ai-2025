@@ -110,6 +110,135 @@ functions:
     package:
       include:
         - functions/intelligence/**
+  
+  # Google Calendar Functions (Internal - No API Gateway)
+  getAllEvents:
+    handler: functions/google_calendar/events.get_all_events
+    layers:
+      - {Ref: GoogleDepsLambdaLayer}
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:Query
+          - dynamodb:GetItem
+          - dynamodb:UpdateItem
+        Resource: 
+          - "arn:aws:dynamodb:*:*:table/${file(./serverless-config.yml):SUBSCRIBERS_TABLE_NAME}"
+    package:
+      include:
+        - functions/google_calendar/**
+  
+  getEventInstances:
+    handler: functions/google_calendar/events.get_event_instances
+    layers:
+      - {Ref: GoogleDepsLambdaLayer}
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:Query
+          - dynamodb:GetItem
+          - dynamodb:UpdateItem
+        Resource: 
+          - "arn:aws:dynamodb:*:*:table/${file(./serverless-config.yml):SUBSCRIBERS_TABLE_NAME}"
+    package:
+      include:
+        - functions/google_calendar/**
+  
+  createEvent:
+    handler: functions/google_calendar/events.create_event
+    layers:
+      - {Ref: GoogleDepsLambdaLayer}
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:Query
+          - dynamodb:GetItem
+          - dynamodb:UpdateItem
+        Resource: 
+          - "arn:aws:dynamodb:*:*:table/${file(./serverless-config.yml):SUBSCRIBERS_TABLE_NAME}"
+    package:
+      include:
+        - functions/google_calendar/**
+  
+  updateEvent:
+    handler: functions/google_calendar/events.update_event
+    layers:
+      - {Ref: GoogleDepsLambdaLayer}
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:Query
+          - dynamodb:GetItem
+          - dynamodb:UpdateItem
+        Resource: 
+          - "arn:aws:dynamodb:*:*:table/${file(./serverless-config.yml):SUBSCRIBERS_TABLE_NAME}"
+    package:
+      include:
+        - functions/google_calendar/**
+  
+  deleteEvent:
+    handler: functions/google_calendar/events.delete_event
+    layers:
+      - {Ref: GoogleDepsLambdaLayer}
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:Query
+          - dynamodb:GetItem
+          - dynamodb:UpdateItem
+        Resource: 
+          - "arn:aws:dynamodb:*:*:table/${file(./serverless-config.yml):SUBSCRIBERS_TABLE_NAME}"
+    package:
+      include:
+        - functions/google_calendar/**
+  
+  rsvpEvent:
+    handler: functions/google_calendar/events.rsvp_event
+    layers:
+      - {Ref: GoogleDepsLambdaLayer}
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:Query
+          - dynamodb:GetItem
+          - dynamodb:UpdateItem
+        Resource: 
+          - "arn:aws:dynamodb:*:*:table/${file(./serverless-config.yml):SUBSCRIBERS_TABLE_NAME}"
+    package:
+      include:
+        - functions/google_calendar/**
+  
+  getAvailability:
+    handler: functions/google_calendar/events.get_availability
+    layers:
+      - {Ref: GoogleDepsLambdaLayer}
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:Query
+          - dynamodb:GetItem
+          - dynamodb:UpdateItem
+        Resource: 
+          - "arn:aws:dynamodb:*:*:table/${file(./serverless-config.yml):SUBSCRIBERS_TABLE_NAME}"
+    package:
+      include:
+        - functions/google_calendar/**
+  
+  getTimezone:
+    handler: functions/google_calendar/events.get_timezone
+    layers:
+      - {Ref: GoogleDepsLambdaLayer}
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:Query
+          - dynamodb:GetItem
+          - dynamodb:UpdateItem
+        Resource: 
+          - "arn:aws:dynamodb:*:*:table/${file(./serverless-config.yml):SUBSCRIBERS_TABLE_NAME}"
+    package:
+      include:
+        - functions/google_calendar/**
 
 resources:
   Resources:
