@@ -15,11 +15,12 @@ import {
   SidebarInset,
   SidebarSeparator,
 } from '../ui/sidebar';
-import { Settings, Sliders, LogOut, User, Calendar } from 'lucide-react';
+import { Settings, Sliders, LogOut, User, Calendar, Plus } from 'lucide-react';
 import logoImage from '../../assets/images/logo.png';
 import SettingsComponent from './Settings';
 import CustomizeAgent from './CustomizeAgent';
 import LinkCalendars from './LinkCalendars';
+import CreateExecutiveAssistant from './CreateExecutiveAssistant';
 import './Dashboard.css';
 import { Route, DashboardSection, validDashboardSections } from '../../constants/routes';
 
@@ -155,6 +156,7 @@ class Dashboard extends Component<DashboardProps, DashboardState> {
       'settings': Route.dashboard.settings,
       'customize': Route.dashboard.customize,
       'calendars': Route.dashboard.calendars,
+      'create-assistant': Route.dashboard['create-assistant'],
     };
     
     if (navigate) {
@@ -271,6 +273,16 @@ class Dashboard extends Component<DashboardProps, DashboardState> {
                     <span>Link Calendars</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    onClick={() => this.handleSectionChange('create-assistant')}
+                    isActive={activeSection === 'create-assistant'}
+                    className={activeSection === 'create-assistant' ? 'bg-purple-100 text-purple-600 font-semibold border-r-4 border-purple-600' : 'text-gray-600 hover:bg-gray-100 hover:text-purple-600'}
+                  >
+                    <Plus className="w-5 h-5" />
+                    <span>Create Executive Assistant</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
@@ -353,6 +365,7 @@ class Dashboard extends Component<DashboardProps, DashboardState> {
               )}
               {activeSection === 'customize' && <CustomizeAgent />}
               {activeSection === 'calendars' && <LinkCalendars />}
+              {activeSection === 'create-assistant' && <CreateExecutiveAssistant />}
             </main>
           </SidebarInset>
         </div>

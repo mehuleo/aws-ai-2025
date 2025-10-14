@@ -17,6 +17,7 @@ class App extends Component<AppProps> {
             <RouterRoute path={Route.dashboard.settings} element={<Dashboard />} />
             <RouterRoute path={Route.dashboard.customize} element={<Dashboard />} />
             <RouterRoute path={Route.dashboard.calendars} element={<Dashboard />} />
+            <RouterRoute path={Route.dashboard['create-assistant']} element={<Dashboard />} />
             {/* Redirect /dashboard to /dashboard/settings by default */}
             <RouterRoute path={Route.dashboard.base} element={<Navigate to={Route.dashboard.settings} replace />} />
           </Routes>
