@@ -1,4 +1,10 @@
 S3_BUCKET_NAME: your-s3-bucket-name
 EMAILS_TABLE_NAME: your-emails-table-name
 SUBSCRIBERS_TABLE_NAME: your-subscribers-table-name
+GOOGLE_CLIENT_ID: abc...
+GOOGLE_CLIENT_SECRET: abc...
+GOOGLE_AUTH_REDIRECT_URI: https://example.com/dashboard
+AGENT_RUNTIME_ARN: arn:aws:bedrock-agentcore:us-east-1:....
+INVITE_CODE: INVITE_CODE
+SES_FROM_EMAIL: wellcome@example.com
 

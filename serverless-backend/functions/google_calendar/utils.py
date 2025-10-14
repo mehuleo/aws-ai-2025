@@ -142,24 +142,24 @@ def create_lambda_response(status_code, success, data=None, error=None):
     }
 
 
-def validate_email_input(event, required_fields=None):
+def validate_input(event, required_fields=None):
     """
-    Validate lambda event input and extract email
+    Validate lambda event input and extract auth token bearer
     
     Args:
         event: Lambda event object
         required_fields: List of additional required field names
         
     Returns:
-        tuple: (email, body_data, error_response)
+        tuple: (auth_email, body_data, error_response)
     """
     try:
-        # Get email from event
-        email = event.get('email')
+        # Get auth email from headers
+        auth_email = event.get('auth_email', '')
         
-        if not email:
+        if not auth_email:
             return None, None, create_lambda_response(
-                400, False, error="Email is required"
+                401, False, error="X-Auth-Bearer header is required"
             )
         
         # Validate additional required fields
@@ -175,7 +175,7 @@ def validate_email_input(event, required_fields=None):
                     error=f"Missing required fields: {', '.join(missing_fields)}"
                 )
         
-        return email, event, None
+        return auth_email, event, None
         
     except Exception as e:
         logger.error(f"Error validating input: {str(e)}")

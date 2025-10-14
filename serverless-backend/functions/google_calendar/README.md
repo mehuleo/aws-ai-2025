@@ -20,7 +20,7 @@ This module provides Lambda functions for managing Google Calendar operations. A
 ### Design Principles
 
 1. **Modular Architecture**: Code is organized into separate modules for authentication, utilities, and event operations
-2. **Authentication Layer**: All functions use a centralized authentication mechanism via `get_access_token()`
+2. **Authentication Layer**: All functions use a centralized authentication mechanism via `get_access_token(auth_email)`
 3. **Token Management**: Automatic token refresh with DynamoDB persistence
 4. **Error Handling**: Standardized error responses with appropriate HTTP status codes
 5. **Google API Integration**: Uses Google Calendar API v3 via `google-api-python-client`
@@ -53,7 +53,7 @@ functions/google_calendar/
 #### `auth.py`
 - **Purpose**: Centralized authentication for all calendar operations
 - **Key Functions**:
-  - `get_access_token(email)`: Retrieve and refresh user's access token
+  - `get_access_token(auth_email)`: Retrieve and refresh user's access token
   - `get_calendar_service(email)`: Get authenticated Google Calendar API service
   - `refresh_access_token(refresh_token)`: Refresh expired tokens
   - `update_token_in_dynamodb()`: Update tokens in DynamoDB
@@ -65,7 +65,7 @@ functions/google_calendar/
   - `check_time_overlap()`: Detect event time conflicts
   - `format_event_response()`: Standardize event response format
   - `create_lambda_response()`: Create consistent Lambda responses
-  - `validate_email_input()`: Input validation and sanitization
+  - `validate_input()`: Input validation and sanitization
   - `build_event_body()`: Build event payloads for Google API
 
 #### `events.py`
@@ -81,7 +81,7 @@ functions/google_calendar/
 All calendar functions follow this authentication flow:
 
 1. **Input**: Lambda receives user's email address
-2. **Token Retrieval**: `get_access_token(email)` queries DynamoDB for user's tokens
+2. **Token Retrieval**: `get_access_token(auth_email)` queries DynamoDB for user's tokens
 3. **Authorization Check**: If no `google_access_token` exists, raises `403 Forbidden`
 4. **Token Validation**: Checks if token is expired (with 30-second buffer)
 5. **Token Refresh**: If expired, uses `refresh_token` to get new `access_token`
@@ -579,11 +579,11 @@ To test a Lambda function locally or via AWS Console:
 
 ```python
 # Test get_access_token
-from functions.google_calendar.auth import get_access_token
-
+auth_from functions.google_calendar.auth import get_access_token
+auth_
 email = "test@example.com"
 try:
-    access_token, user_data, error = get_access_token(email)
+    access_token, user_data, error = get_access_token(auth_email)
     print(f"Access token: {access_token[:20]}...")
 except AuthenticationError as e:
     print(f"Auth failed: {e.message} (Status: {e.status_code})")
@@ -611,7 +611,7 @@ def your_new_function(event, context):
     """
     try:
         # 1. Validate input
-        email, body, error_response = validate_email_input(
+        auth_token_bearer, body, error_response = validate_input(
             event, 
             ['required_field1', 'required_field2']
         )
@@ -619,7 +619,7 @@ def your_new_function(event, context):
             return error_response
         
         # 2. Get authenticated calendar service
-        service, user_data, error = get_calendar_service(email)
+        service, user_data, error = get_calendar_service(auth_token_bearer)
         if error:
             return create_lambda_response(
                 error.get('status_code', 500), 
@@ -720,12 +720,12 @@ start_datetime = "2025-10-15 10:00:00"
 
 ```python
 # ✅ Correct
-email, body, error_response = validate_email_input(event, ['required_field'])
+auth_token_bearer, body, error_response = validate_input(event, ['required_field'])
 if error_response:
     return error_response
 
 # ❌ Incorrect - Don't assume inputs exist
-email = event['email']  # May raise KeyError
+auth_token_bearer = event['auth_token_bearer']  # May raise KeyError
 ```
 
 ### 5. Log Appropriately

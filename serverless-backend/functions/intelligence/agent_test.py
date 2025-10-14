@@ -71,7 +71,7 @@ def test_invoke(event, context):
         
         # Create payload for the agent
         payload = json.dumps({
-            "input": {"prompt": prompt}
+            "prompt": prompt
         })
         
         # Generate a unique session ID (must be 33+ characters)

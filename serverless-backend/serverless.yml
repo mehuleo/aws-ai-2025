@@ -13,10 +13,13 @@ provider:
     S3_BUCKET_NAME: ${file(./serverless-config.yml):S3_BUCKET_NAME}
     EMAILS_TABLE_NAME: ${file(./serverless-config.yml):EMAILS_TABLE_NAME}
     SUBSCRIBERS_TABLE_NAME: ${file(./serverless-config.yml):SUBSCRIBERS_TABLE_NAME}
+    AGENTS_ALLOCATION_TABLE_NAME: ${file(./serverless-config.yml):AGENTS_ALLOCATION_TABLE_NAME}
     GOOGLE_CLIENT_ID: ${file(./serverless-config.yml):GOOGLE_CLIENT_ID}
     GOOGLE_CLIENT_SECRET: ${file(./serverless-config.yml):GOOGLE_CLIENT_SECRET}
     GOOGLE_AUTH_REDIRECT_URI: ${file(./serverless-config.yml):GOOGLE_AUTH_REDIRECT_URI}
     AGENT_RUNTIME_ARN: ${file(./serverless-config.yml):AGENT_RUNTIME_ARN}
+    INVITE_CODE: ${file(./serverless-config.yml):INVITE_CODE}
+    SES_FROM_EMAIL: ${file(./serverless-config.yml):SES_FROM_EMAIL}
 
 plugins:
   - serverless-python-requirements
@@ -111,8 +114,52 @@ functions:
       include:
         - functions/intelligence/**
   
+  validateInvite:
+    handler: functions/api/validate_invite.validate_invite
+    events:
+      - http:
+          path: v1/validateInvite
+          method: post
+          cors: true
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:Query
+          - dynamodb:GetItem
+          - dynamodb:PutItem
+        Resource: 
+          - "arn:aws:dynamodb:*:*:table/${file(./serverless-config.yml):SUBSCRIBERS_TABLE_NAME}"
+          - "arn:aws:dynamodb:*:*:table/${file(./serverless-config.yml):AGENTS_ALLOCATION_TABLE_NAME}"
+      - Effect: Allow
+        Action:
+          - ses:SendEmail
+        Resource: "*"
+    package:
+      include:
+        - functions/api/**
+  
+  getAgentEmail:
+    handler: functions/api/validate_invite.get_agent_email
+    events:
+      - http:
+          path: v1/getAgentEmail
+          method: post
+          cors: true
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:Query
+          - dynamodb:GetItem
+          - dynamodb:Scan
+        Resource: 
+          - "arn:aws:dynamodb:*:*:table/${file(./serverless-config.yml):SUBSCRIBERS_TABLE_NAME}"
+          - "arn:aws:dynamodb:*:*:table/${file(./serverless-config.yml):AGENTS_ALLOCATION_TABLE_NAME}"
+    package:
+      include:
+        - functions/api/**
+  
   # Google Calendar Functions (Internal - No API Gateway)
-  getAllEvents:
+  calendar_getAllEvents:
     handler: functions/google_calendar/events.get_all_events
     layers:
       - {Ref: GoogleDepsLambdaLayer}
@@ -128,7 +175,7 @@ functions:
       include:
         - functions/google_calendar/**
   
-  getEventInstances:
+  calendar_getEventInstances:
     handler: functions/google_calendar/events.get_event_instances
     layers:
       - {Ref: GoogleDepsLambdaLayer}
@@ -144,7 +191,7 @@ functions:
       include:
         - functions/google_calendar/**
   
-  createEvent:
+  calendar_createEvent:
     handler: functions/google_calendar/events.create_event
     layers:
       - {Ref: GoogleDepsLambdaLayer}
@@ -160,7 +207,7 @@ functions:
       include:
         - functions/google_calendar/**
   
-  updateEvent:
+  calendar_updateEvent:
     handler: functions/google_calendar/events.update_event
     layers:
       - {Ref: GoogleDepsLambdaLayer}
@@ -176,7 +223,7 @@ functions:
       include:
         - functions/google_calendar/**
   
-  deleteEvent:
+  calendar_deleteEvent:
     handler: functions/google_calendar/events.delete_event
     layers:
       - {Ref: GoogleDepsLambdaLayer}
@@ -192,7 +239,7 @@ functions:
       include:
         - functions/google_calendar/**
   
-  rsvpEvent:
+  calendar_rsvpEvent:
     handler: functions/google_calendar/events.rsvp_event
     layers:
       - {Ref: GoogleDepsLambdaLayer}
@@ -208,7 +255,7 @@ functions:
       include:
         - functions/google_calendar/**
   
-  getAvailability:
+  calendar_getAvailability:
     handler: functions/google_calendar/events.get_availability
     layers:
       - {Ref: GoogleDepsLambdaLayer}
@@ -224,7 +271,7 @@ functions:
       include:
         - functions/google_calendar/**
   
-  getTimezone:
+  calendar_getTimezone:
     handler: functions/google_calendar/events.get_timezone
     layers:
       - {Ref: GoogleDepsLambdaLayer}

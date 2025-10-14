@@ -13,7 +13,7 @@ from .utils import (
     get_date_range, 
     format_event_response, 
     create_lambda_response,
-    validate_email_input,
+    validate_input,
     check_time_overlap,
     build_event_body,
     parse_datetime,
@@ -33,7 +33,7 @@ def get_all_events(event, context):
     for today + next 14 days. Converts all event times to user's timezone.
     
     Args:
-        event: Lambda event containing 'email'
+        event: Lambda event containing 'auth_email'
         context: Lambda context
         
     Returns:
@@ -41,14 +41,14 @@ def get_all_events(event, context):
     """
     try:
         # Validate input
-        email, body, error_response = validate_email_input(event)
+        auth_email, body, error_response = validate_input(event)
         if error_response:
             return error_response
         
-        logger.info(f"Fetching events for user: {email}")
+        logger.info(f"Fetching events for user: {auth_email}")
         
         # Get authenticated calendar service
-        service, user_data, error = get_calendar_service(email)
+        service, user_data, error = get_calendar_service(auth_email)
         if error:
             return create_lambda_response(
                 error.get('status_code', 500), 
@@ -88,7 +88,7 @@ def get_all_events(event, context):
             formatted_evt = format_event_response(evt_with_timezone)
             formatted_events.append(formatted_evt)
         
-        logger.info(f"Successfully fetched {len(formatted_events)} events for {email}")
+        logger.info(f"Successfully fetched {len(formatted_events)} events for {auth_email}")
         
         return create_lambda_response(
             200, 
@@ -119,7 +119,7 @@ def get_event_instances(event, context):
     for today + next 14 days.
     
     Args:
-        event: Lambda event containing 'email' and 'event_id'
+        event: Lambda event containing 'auth_email' and 'event_id'
         context: Lambda context
         
     Returns:
@@ -127,15 +127,15 @@ def get_event_instances(event, context):
     """
     try:
         # Validate input
-        email, body, error_response = validate_email_input(event, ['event_id'])
+        auth_email, body, error_response = validate_input(event, ['event_id'])
         if error_response:
             return error_response
         
         event_id = body.get('event_id')
-        logger.info(f"Fetching instances for event {event_id}, user: {email}")
+        logger.info(f"Fetching instances for event {event_id}, user: {auth_email}")
         
         # Get authenticated calendar service
-        service, user_data, error = get_calendar_service(email)
+        service, user_data, error = get_calendar_service(auth_email)
         if error:
             return create_lambda_response(
                 error.get('status_code', 500), 
@@ -191,7 +191,7 @@ def create_event(event, context):
     
     Args:
         event: Lambda event containing:
-            - email: User's email
+            - auth_email: User's auth token
             - event_name: Event title
             - start_datetime: Start datetime (ISO format)
             - end_datetime: End datetime (ISO format)
@@ -205,7 +205,7 @@ def create_event(event, context):
     try:
         # Validate input
         required_fields = ['event_name', 'start_datetime', 'end_datetime']
-        email, body, error_response = validate_email_input(event, required_fields)
+        auth_email, body, error_response = validate_input(event, required_fields)
         if error_response:
             return error_response
         
@@ -215,10 +215,10 @@ def create_event(event, context):
         guest_emails = body.get('guest_emails', [])
         description = body.get('description')
         
-        logger.info(f"Creating event '{event_name}' for user: {email}")
+        logger.info(f"Creating event '{event_name}' for user: {auth_email}")
         
         # Get authenticated calendar service
-        service, user_data, error = get_calendar_service(email)
+        service, user_data, error = get_calendar_service(auth_email)
         if error:
             return create_lambda_response(
                 error.get('status_code', 500), 
@@ -271,7 +271,7 @@ def create_event(event, context):
         
         formatted_event = format_event_response(created_event)
         
-        logger.info(f"Successfully created event {created_event.get('id')} for {email}")
+        logger.info(f"Successfully created event {created_event.get('id')} for {auth_email}")
         
         return create_lambda_response(
             201, 
@@ -297,7 +297,7 @@ def update_event(event, context):
     
     Args:
         event: Lambda event containing:
-            - email: User's email
+            - auth_email: User's auth token
             - event_id: Event ID or instance ID
             - recurrence: Recurrence rule (optional)
             - event_name: New event title (optional)
@@ -312,15 +312,15 @@ def update_event(event, context):
     """
     try:
         # Validate input
-        email, body, error_response = validate_email_input(event, ['event_id'])
+        auth_email, body, error_response = validate_input(event, ['event_id'])
         if error_response:
             return error_response
         
         event_id = body.get('event_id')
-        logger.info(f"Updating event {event_id} for user: {email}")
+        logger.info(f"Updating event {event_id} for user: {auth_email}")
         
         # Get authenticated calendar service
-        service, user_data, error = get_calendar_service(email)
+        service, user_data, error = get_calendar_service(auth_email)
         if error:
             return create_lambda_response(
                 error.get('status_code', 500), 
@@ -381,7 +381,7 @@ def update_event(event, context):
         
         formatted_event = format_event_response(updated_event)
         
-        logger.info(f"Successfully updated event {event_id} for {email}")
+        logger.info(f"Successfully updated event {event_id} for {auth_email}")
         
         return create_lambda_response(
             200, 
@@ -407,7 +407,7 @@ def delete_event(event, context):
     
     Args:
         event: Lambda event containing:
-            - email: User's email
+            - auth_email: User's auth token
             - event_id: Event ID or instance ID
         context: Lambda context
         
@@ -416,15 +416,15 @@ def delete_event(event, context):
     """
     try:
         # Validate input
-        email, body, error_response = validate_email_input(event, ['event_id'])
+        auth_email, body, error_response = validate_input(event, ['event_id'])
         if error_response:
             return error_response
         
         event_id = body.get('event_id')
-        logger.info(f"Deleting event {event_id} for user: {email}")
+        logger.info(f"Deleting event {event_id} for user: {auth_email}")
         
         # Get authenticated calendar service
-        service, user_data, error = get_calendar_service(email)
+        service, user_data, error = get_calendar_service(auth_email)
         if error:
             return create_lambda_response(
                 error.get('status_code', 500), 
@@ -447,7 +447,7 @@ def delete_event(event, context):
                 error="Event not found or already deleted"
             )
         
-        logger.info(f"Successfully deleted event {event_id} for {email}")
+        logger.info(f"Successfully deleted event {event_id} for {auth_email}")
         
         return create_lambda_response(
             200, 
@@ -473,7 +473,7 @@ def rsvp_event(event, context):
     
     Args:
         event: Lambda event containing:
-            - email: User's email
+            - auth_email: User's auth token
             - event_id: Event ID or instance ID
             - rsvp_status: 'accepted', 'tentative', or 'declined'
             - note: Optional note (optional)
@@ -485,7 +485,7 @@ def rsvp_event(event, context):
     try:
         # Validate input
         required_fields = ['event_id', 'rsvp_status']
-        email, body, error_response = validate_email_input(event, required_fields)
+        auth_email, body, error_response = validate_input(event, required_fields)
         if error_response:
             return error_response
         
@@ -510,10 +510,10 @@ def rsvp_event(event, context):
         }
         response_status = status_map[rsvp_status]
         
-        logger.info(f"Setting RSVP status '{rsvp_status}' for event {event_id}, user: {email}")
+        logger.info(f"Setting RSVP status '{rsvp_status}' for event {event_id}, user: {auth_email}")
         
         # Get authenticated calendar service
-        service, user_data, error = get_calendar_service(email)
+        service, user_data, error = get_calendar_service(auth_email)
         if error:
             return create_lambda_response(
                 error.get('status_code', 500), 
@@ -536,7 +536,7 @@ def rsvp_event(event, context):
         user_found = False
         
         for attendee in attendees:
-            if attendee.get('email') == email:
+            if attendee.get('email') == auth_email:
                 attendee['responseStatus'] = response_status
                 if note:
                     attendee['comment'] = note
@@ -546,7 +546,7 @@ def rsvp_event(event, context):
         if not user_found:
             # User is not in attendee list, add them
             attendees.append({
-                'email': email,
+                'email': auth_email,
                 'responseStatus': response_status,
                 'comment': note if note else ''
             })
@@ -561,7 +561,7 @@ def rsvp_event(event, context):
             sendUpdates='all'
         ).execute()
         
-        logger.info(f"Successfully updated RSVP status for event {event_id}, user: {email}")
+        logger.info(f"Successfully updated RSVP status for event {event_id}, user: {auth_email}")
         
         return create_lambda_response(
             200, 
@@ -588,7 +588,7 @@ def get_availability(event, context):
     
     Args:
         event: Lambda event containing:
-            - email: User's email
+            - auth_email: User's auth token
             - start_time: Start time for lookup (optional, defaults to now + 1 hour)
             - end_time: End time for lookup (optional, defaults to now + 14 days)
         context: Lambda context
@@ -598,14 +598,14 @@ def get_availability(event, context):
     """
     try:
         # Validate input
-        email, body, error_response = validate_email_input(event)
+        auth_email, body, error_response = validate_input(event)
         if error_response:
             return error_response
         
-        logger.info(f"Fetching availability for user: {email}")
+        logger.info(f"Fetching availability for user: {auth_email}")
         
         # Get authenticated calendar service
-        service, user_data, error = get_calendar_service(email)
+        service, user_data, error = get_calendar_service(auth_email)
         if error:
             return create_lambda_response(
                 error.get('status_code', 500), 
@@ -637,7 +637,7 @@ def get_availability(event, context):
         calendar_freebusy = freebusy_result.get('calendars', {}).get(PRIMARY_CALENDAR, {})
         busy_slots = calendar_freebusy.get('busy', [])
         
-        logger.info(f"Successfully fetched availability for {email}")
+        logger.info(f"Successfully fetched availability for {auth_email}")
         
         return create_lambda_response(
             200, 
@@ -667,7 +667,7 @@ def get_timezone(event, context):
     
     Args:
         event: Lambda event containing:
-            - email: User's email
+            - auth_email: User's auth token
         context: Lambda context
         
     Returns:
@@ -675,14 +675,14 @@ def get_timezone(event, context):
     """
     try:
         # Validate input
-        email, body, error_response = validate_email_input(event)
+        auth_email, body, error_response = validate_input(event)
         if error_response:
             return error_response
         
-        logger.info(f"Fetching timezone for user: {email}")
+        logger.info(f"Fetching timezone for user: {auth_email}")
         
         # Get authenticated calendar service
-        service, user_data, error = get_calendar_service(email)
+        service, user_data, error = get_calendar_service(auth_email)
         if error:
             return create_lambda_response(
                 error.get('status_code', 500), 
@@ -695,7 +695,7 @@ def get_timezone(event, context):
         
         timezone = calendar.get('timeZone', 'UTC')
         
-        logger.info(f"Successfully fetched timezone '{timezone}' for {email}")
+        logger.info(f"Successfully fetched timezone '{timezone}' for {auth_email}")
         
         return create_lambda_response(
             200, 

@@ -23,7 +23,7 @@ All tasks from `task5.md` have been successfully implemented!
 
 ## 🔐 Authentication Module (`auth.py`)
 
-### Key Function: `get_access_token(email)`
+### Key Function: `get_access_token(auth_email)`
 
 **Purpose**: Centralized authentication for all calendar operations
 
@@ -57,7 +57,7 @@ class AuthenticationError(Exception):
 - `check_time_overlap()`: Detect event time conflicts
 - `format_event_response()`: Standardize event response schema
 - `create_lambda_response()`: Create consistent Lambda responses
-- `validate_email_input()`: Input validation with required fields check
+- `validate_input()`: Input validation with required fields check
 - `build_event_body()`: Build event payloads for Google Calendar API
 
 ---
@@ -80,7 +80,7 @@ class AuthenticationError(Exception):
 ### Common Features
 
 ✅ All functions:
-- Call `get_access_token(email)` for authentication
+- Call `get_access_token(auth_email)` for authentication
 - Use `PRIMARY_CALENDAR` constant ('primary')
 - Return standardized response format
 - Include comprehensive error handling
@@ -319,7 +319,7 @@ The `README.md` includes:
 
 1. **Architecture Overview**: Design principles, dependencies
 2. **Folder Structure**: Detailed breakdown of modules
-3. **Authentication**: How `get_access_token()` works
+3. **Authentication**: How `get_access_token(auth_email)` works
 4. **Lambda Functions**: Full documentation for all 8 functions
 5. **Code Standards**: Naming conventions, response formats
 6. **Error Handling**: Error categories, status codes
@@ -429,7 +429,7 @@ Functions will be available for internal invocation:
 ### Requirements Met
 
 ✅ **All Requirements from task5.md**:
-1. ✅ Created `get_access_token()` as common function
+1. ✅ Created `get_access_token(auth_email)` as common function
 2. ✅ Queries DynamoDB with email as primary key
 3. ✅ Implements token refresh mechanism
 4. ✅ Raises 403 if user not authorized
@@ -438,7 +438,7 @@ Functions will be available for internal invocation:
 7. ✅ Set `googleDeps` as layer dependency
 8. ✅ Code is modular and organized
 9. ✅ Functions in `functions/google_calendar/` directory
-10. ✅ All functions call `get_access_token(email)` first
+10. ✅ All functions call `get_access_token(auth_email)` first
 11. ✅ Strict input/output validation implemented
 12. ✅ No API Gateway endpoints (internal only)
 13. ✅ Proper error messages for AI agents

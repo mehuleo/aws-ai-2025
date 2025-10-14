@@ -109,7 +109,7 @@ def update_token_in_dynamodb(dynamodb_table, email, new_access_token, refresh_to
         return False, error_msg
 
 
-def get_access_token(email):
+def get_access_token(auth_email):
     """
     Get valid access token for a user, refreshing if necessary.
     
@@ -117,7 +117,7 @@ def get_access_token(email):
     It retrieves the user's access token from DynamoDB and refreshes it if expired.
     
     Args:
-        email (str): User's email address (primary key in DynamoDB)
+        auth_email (str): User's calendar email address (primary key in DynamoDB)
         
     Returns:
         tuple: (access_token, user_data, error)
@@ -137,13 +137,13 @@ def get_access_token(email):
         response = dynamodb_table.query(
             KeyConditionExpression='email = :email',
             ExpressionAttributeValues={
-                ':email': email
+                ':email': auth_email
             }
         )
         
         # Check if user exists
         if not response.get('Items'):
-            logger.error(f"User not found in database: {email}")
+            logger.error(f"User not found in database: {auth_email}")
             raise AuthenticationError("User not found", 404)
         
         user_data = response['Items'][0]
@@ -153,7 +153,7 @@ def get_access_token(email):
         refresh_token = user_data.get('refresh_token')
         
         if not access_token or not refresh_token:
-            logger.error(f"User {email} does not have calendar access (no tokens)")
+            logger.error(f"User {auth_email} does not have calendar access (no tokens)")
             raise AuthenticationError(
                 "User is not authorized for calendar access. Please grant calendar permissions.",
                 403
@@ -169,12 +169,12 @@ def get_access_token(email):
                 
                 # If token is expired or will expire soon, refresh it
                 if current_time + buffer_time >= expires_datetime:
-                    logger.info(f"Access token expired for {email}, refreshing...")
+                    logger.info(f"Access token expired for {auth_email}, refreshing...")
                     
                     new_token_data, refresh_error = refresh_access_token(refresh_token)
                     
                     if refresh_error:
-                        logger.error(f"Failed to refresh token for {email}: {refresh_error}")
+                        logger.error(f"Failed to refresh token for {auth_email}: {refresh_error}")
                         raise AuthenticationError(
                             "Failed to refresh access token. Please re-authorize.",
                             401
@@ -187,7 +187,7 @@ def get_access_token(email):
                     # Update token in database
                     update_success, update_error = update_token_in_dynamodb(
                         dynamodb_table, 
-                        email, 
+                        auth_email, 
                         access_token, 
                         refresh_token, 
                         expires_in
@@ -202,15 +202,15 @@ def get_access_token(email):
                         datetime.utcnow() + timedelta(seconds=expires_in)
                     ).isoformat()
                     
-                    logger.info(f"Token refreshed successfully for {email}")
+                    logger.info(f"Token refreshed successfully for {auth_email}")
                 else:
-                    logger.info(f"Token is still valid for {email}")
+                    logger.info(f"Token is still valid for {auth_email}")
                     
             except Exception as e:
-                logger.warning(f"Error checking token expiry for {email}: {str(e)}")
+                logger.warning(f"Error checking token expiry for {auth_email}: {str(e)}")
                 # Continue with existing token if expiry check fails
         
-        logger.info(f"Access token retrieved successfully for {email}")
+        logger.info(f"Access token retrieved successfully for {auth_email}")
         return access_token, user_data, None
         
     except AuthenticationError:
