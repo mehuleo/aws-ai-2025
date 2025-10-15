@@ -75,6 +75,7 @@ functions:
         Resource: 
           - "arn:aws:dynamodb:*:*:table/${file(./serverless-config.yml):EMAILS_TABLE_NAME}"
           - "arn:aws:dynamodb:*:*:table/${file(./serverless-config.yml):SUBSCRIBERS_TABLE_NAME}"
+          - "arn:aws:dynamodb:*:*:table/${file(./serverless-config.yml):AGENTS_ALLOCATION_TABLE_NAME}"
     package:
       include:
         - functions/utils/**

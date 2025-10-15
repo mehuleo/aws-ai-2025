@@ -14,6 +14,7 @@ import re
 S3_BUCKET_NAME = os.environ.get('S3_BUCKET_NAME')
 EMAILS_TABLE_NAME = os.environ.get('EMAILS_TABLE_NAME')
 SUBSCRIBERS_TABLE_NAME = os.environ.get('SUBSCRIBERS_TABLE_NAME')
+AGENTS_ALLOCATION_TABLE_NAME = os.environ.get('AGENTS_ALLOCATION_TABLE_NAME')
 
 
 def extract_ses_metadata(event):
@@ -88,6 +89,30 @@ def normalize_list_field(value, default=None):
         return [value]
     else:
         return default
+
+
+def extract_email_address(email_string):
+    """Extract email address from formatted string like 'John Doe <someone@gmail.com>' or 'someone@gmail.com'"""
+    if not email_string:
+        return None
+    
+    # Remove leading/trailing whitespace
+    email_string = email_string.strip()
+    
+    # Pattern to match email addresses in angle brackets: "John Doe <email@domain.com>"
+    angle_bracket_pattern = r'<([^>]+)>'
+    match = re.search(angle_bracket_pattern, email_string)
+    if match:
+        return match.group(1).strip()
+    
+    # Pattern to match plain email addresses: "email@domain.com"
+    email_pattern = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
+    match = re.search(email_pattern, email_string)
+    if match:
+        return match.group(0).strip()
+    
+    # If no pattern matches, return the original string (might be a malformed email)
+    return email_string
 
 
 def clean_subject(subject):
@@ -195,7 +220,67 @@ def lookup_subscribers(dynamodb, parsed_email):
         return []
 
 
-def create_dynamodb_item(metadata, parsed_email, s3_key, subscribers=None):
+def find_agent_email(dynamodb, parsed_email):
+    """Find agent email by scanning AGENTS_ALLOCATION_TABLE_NAME for matching email addresses"""
+    # Collect all email addresses from from, to, and cc lists
+    email_addresses = []
+    
+    # Add from address
+    if parsed_email.get('from'):
+        email_addresses.append(parsed_email['from'])
+    
+    # Add to addresses
+    if parsed_email.get('to'):
+        email_addresses.extend(parsed_email['to'])
+    
+    # Add cc addresses
+    if parsed_email.get('cc'):
+        email_addresses.extend(parsed_email['cc'])
+    
+    print(f"Email addresses: {str(email_addresses)}")
+    
+    # Extract email addresses and remove duplicates and empty values
+    email_addresses = list(set([extract_email_address(email) for email in email_addresses if email and extract_email_address(email)]))
+
+    print(f"Email addresses after extraction: {str(email_addresses)}")
+    
+    if not email_addresses:
+        print("No email addresses found")
+        return None
+    
+    try:
+        # Get the agents allocation table
+        agents_table = dynamodb.Table(AGENTS_ALLOCATION_TABLE_NAME)
+        
+        # Scan the table to find matching email addresses
+        for email in email_addresses:
+            try:
+                response = agents_table.scan(
+                    FilterExpression='email = :user_email',
+                    ExpressionAttributeValues={
+                        ':user_email': email
+                    }
+                )
+                
+                if response['Items']:
+                    # Return the first matching agent_email
+                    agent_item = response['Items'][0]
+                    print(f"Found agent email {agent_item['agent_email']} for user email {email}")
+                    return agent_item['agent_email']
+                    
+            except Exception as e:
+                print(f"Error scanning for email {email}: {str(e)}")
+                continue
+        
+        print("No agent email found for any of the email addresses")
+        return None
+        
+    except Exception as e:
+        print(f"Error looking up agent email: {str(e)}")
+        return None
+
+
+def create_dynamodb_item(metadata, parsed_email, s3_key, subscribers=None, agent_email=None):
     """Create DynamoDB item from parsed email data"""
     record_uuid = str(uuid.uuid4())
     
@@ -206,7 +291,8 @@ def create_dynamodb_item(metadata, parsed_email, s3_key, subscribers=None):
     cleaned_subject = clean_subject(parsed_email['subject'])
     session_id = hashlib.md5(cleaned_subject.encode('utf-8')).hexdigest()
     
-    return {
+    # Build the DynamoDB item
+    dynamodb_item = {
         'uuid': record_uuid,
         'message_id': metadata['message_id'],
         'timestamp': metadata['timestamp'],
@@ -220,7 +306,13 @@ def create_dynamodb_item(metadata, parsed_email, s3_key, subscribers=None):
         's3_bucket': S3_BUCKET_NAME,
         's3_key': s3_key,
         'subscribers': subscribers
-    }, record_uuid
+    }
+    
+    # Add agent_email if provided
+    if agent_email:
+        dynamodb_item['agent_email'] = agent_email
+    
+    return dynamodb_item, record_uuid
 
 
 def store_email_in_dynamodb(dynamodb_table, dynamodb_item):
@@ -250,9 +342,12 @@ def parseEmail(event, context):
         
         # Lookup subscribers
         subscribers = lookup_subscribers(dynamodb, parsed_email)
+
+        # Find agent email
+        agent_email = find_agent_email(dynamodb, parsed_email)
         
         # Create DynamoDB item
-        dynamodb_item, record_uuid = create_dynamodb_item(metadata, parsed_email, s3_key, subscribers)
+        dynamodb_item, record_uuid = create_dynamodb_item(metadata, parsed_email, s3_key, subscribers, agent_email)
         
         # Store in DynamoDB
         store_email_in_dynamodb(dynamodb_table, dynamodb_item)
