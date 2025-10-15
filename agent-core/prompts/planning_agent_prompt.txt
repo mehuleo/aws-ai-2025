@@ -90,6 +90,7 @@ Each tool must appear **verbatim** in the `toolName` property when referenced in
 * Apply **reflection mode** before output:
 
   * Check for completeness, logical flow, and clarity.
+  * Make sure there the planning ends with either 'communicate' or 'replan' step.
   * If missing info → create a clarification Intent.
   * Output only the refined, final JSON.
 

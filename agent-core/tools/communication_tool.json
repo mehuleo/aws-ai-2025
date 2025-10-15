@@ -1,0 +1,33 @@
+[
+    {
+        "name": "communicate",
+        "description": "Sends an email communication to specified recipients. Use this tool when you need to send emails, notifications, or any form of communication via email. Example: to = ['John Doe <john.doe@example.com>'], subject = 'Project Update Meeting with John Doe', body = 'Hey Mehul,\n    I have created a new event in your calendar for tomorrow. Please check it out.\nThanks,\nSuperagent'",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "to": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "List of recipient email addresses. Can include names in format 'First-name Last-name <email@example.com>' or just email addresses. Example: ['mehul patel <mehul.patel981@gmail.com>', 'John Doe <john.doe@example.com>']"
+                },
+                "cc": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "List of CC recipient email addresses. Can include names in format 'First-name Last-name <email@example.com>' or just email addresses. Optional field."
+                },
+                "body": {
+                    "type": "string",
+                    "description": "The main content/body of the email. Can include line breaks and formatting. Example: 'Could you please find out what's my day looks like today?\\n        - Superagent\\n'"
+                }
+            },
+            "required": [
+                "to",
+                "body"
+            ]
+        }
+    }
+]
