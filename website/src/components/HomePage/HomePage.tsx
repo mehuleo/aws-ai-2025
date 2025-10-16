@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import './HomePage.css';
 import logo from '../../assets/images/logo.png';
-import hero from '../../assets/images/hero.png';
+import hero from '../../assets/images/hero.jpg';
 import GoogleLoginButton from '../GoogleLoginButton/GoogleLoginButton';
 import { Route } from '../../constants/routes';
 

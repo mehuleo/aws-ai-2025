@@ -180,7 +180,7 @@ class Dashboard extends Component<DashboardProps, DashboardState> {
       this.setState({ activeSection: section as DashboardSection });
     } else {
       // Default to settings if path doesn't match
-      this.setState({ activeSection: 'settings' });
+      this.setState({ activeSection: 'calendars' });
     }
   }
 
