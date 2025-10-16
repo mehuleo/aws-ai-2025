@@ -38,6 +38,8 @@ The agent receives three sections via user prompt:
 1. **Step Details** (Current Step Schema)
 2. **Previous Execution Results**
 3. **Original Email** (context only)
+  a. You can use `"today"` to **resolve temporal expressions** (e.g., “next Friday”, “tomorrow afternoon”).
+  b. You can use people from `to`/`cc` to infer email ID of a person mentioned by name in the conversation.
 
 ---
 
@@ -75,7 +77,8 @@ The agent receives three sections via user prompt:
   "cc": "",
   "agent_email": "assistant@mycompany.com",
   "subject": "Schedule a client update call",
-  "body": "Please arrange a meeting with John Doe for next week to go over project updates."
+  "body": "Please arrange a meeting with John Doe for next week to go over project updates.",
+  "today": "string - current date and time in ISO 8601 format (used for interpreting relative terms like 'today', 'tomorrow', or 'next week')"
 }
 ```
 
@@ -133,6 +136,7 @@ The agent receives three sections via user prompt:
 Before returning, ensure:
 - You worked only on the provided step.
 - Tool name matches one in TOOLS exactly.
+- Property name exactly matches in TOOLS schema.
 - Constructed API payload follows the input schema.
 - No placeholder or imaginary data.
-- Output strictly follows the response schema."
+- Output strictly follows the response schema.

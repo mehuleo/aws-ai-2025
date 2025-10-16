@@ -1,4 +1,3 @@
-from datetime import datetime, timezone
 import json
 from time import timezone
 import requests
@@ -288,14 +287,6 @@ def load_system_prompt(agent_name, tool_set):
             prompt = f.read().strip()
             # Replace the {tool_set} placeholder with the actual tool set JSON
             prompt = prompt.replace("{tool_set}", tool_set_json_str)
-
-            # Replace the {today} placeholder with the actual today's date
-            # Get current UTC datetime
-            utc_now = datetime.now(timezone.utc)
-            # ISO 8601 format
-            iso_utc = utc_now.isoformat()
-            prompt = prompt.replace("{today}", iso_utc)
-            
             # print("System prompt:")
             # print(prompt)
             return prompt

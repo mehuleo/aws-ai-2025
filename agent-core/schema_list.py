@@ -19,6 +19,7 @@ class EmailPayload:
     agent_email: str
     subject: str
     body: str
+    today: Optional[str] = None # current date and time in ISO 8601 format
 
 # ============================================================================
 # PLANNING AGENT SCHEMAS

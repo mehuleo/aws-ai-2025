@@ -1,3 +1,4 @@
+from datetime import datetime
 import os
 import json
 import boto3
@@ -39,8 +40,8 @@ CLIENT_ID = os.getenv("CLIENT_ID", "")
 CLIENT_SECRET = os.getenv("CLIENT_SECRET", "")
 TOKEN_URL = os.getenv("TOKEN_URL", "")
 GATEWAY_URL = os.getenv("GATEWAY_URL", "")
-MODEL_ID = "us.amazon.nova-lite-v1:0"
-# MODEL_ID = "us.amazon.nova-pro-v1:0"
+# MODEL_ID = "us.amazon.nova-lite-v1:0"
+MODEL_ID = "us.amazon.nova-pro-v1:0"
 
 # Global state
 ACCESS_TOKEN = None
@@ -103,7 +104,8 @@ def execute_planning_phase(email_data: EmailPayload) -> ExecutionPlan:
             "cc": email_data.cc,
             "agent_email": email_data.agent_email,
             "subject": email_data.subject,
-            "body": email_data.body
+            "body": email_data.body,
+            "today": datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")
         }
         
         print(f"Planning agent input: {json.dumps(planning_input, indent=2)}")
@@ -262,7 +264,8 @@ def execute_communication_phase(
                 "cc": original_email.cc,
                 "agent_email": original_email.agent_email,
                 "subject": original_email.subject,
-                "body": original_email.body
+                "body": original_email.body,
+                "today": datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")
             }
         }
         
@@ -440,7 +443,7 @@ def execute_step(
                 "to": [original_email.from_email],
                 "cc": comm_response.apiPayload.get('cc', []),
                 "subject": f"Re: {original_email.subject}" if not original_email.subject.lower().startswith("re: ") else original_email.subject,
-                "body": comm_response.apiPayload.get('body', '')
+                "body": comm_response.apiPayload.get('body') or comm_response.apiPayload.get('message', '')
             }
             print(f"SES payload: {json.dumps(ses_payload, indent=2)}")
             tool_response = send_ses_email(ses_payload)
@@ -526,6 +529,7 @@ def invoke(payload):
             print(f"Full traceback: {traceback.format_exc()}")
             return {"error": f"Planning phase failed: {e}"}
         
+        # return True
         # Step 2 & 3: Execute the plan
         try:
             execution_results = execute_plan(execution_plan, email_data)
