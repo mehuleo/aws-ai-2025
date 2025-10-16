@@ -15,6 +15,7 @@ S3_BUCKET_NAME = os.environ.get('S3_BUCKET_NAME')
 EMAILS_TABLE_NAME = os.environ.get('EMAILS_TABLE_NAME')
 SUBSCRIBERS_TABLE_NAME = os.environ.get('SUBSCRIBERS_TABLE_NAME')
 AGENTS_ALLOCATION_TABLE_NAME = os.environ.get('AGENTS_ALLOCATION_TABLE_NAME')
+AGENT_RUNTIME_ARN = os.environ.get('AGENT_RUNTIME_ARN')
 
 
 def extract_ses_metadata(event):
@@ -319,6 +320,112 @@ def store_email_in_dynamodb(dynamodb_table, dynamodb_item):
     """Store email data in DynamoDB"""
     dynamodb_table.put_item(Item=dynamodb_item)
 
+def invoke_ea_agent(agent_payload):
+    # Get the agent runtime ARN from environment variables
+    if not AGENT_RUNTIME_ARN:
+        error_msg = "Agent runtime ARN not configured in environment variables"
+        print(error_msg)
+        raise ValueError(error_msg)
+    
+    # Initialize Bedrock Agentcore client
+    try:
+        client = boto3.client('bedrock-agentcore', region_name='us-east-1')
+    except Exception as client_error:
+        print(f"Failed to initialize Bedrock Agentcore client: {str(client_error)}")
+        raise
+    
+    # Validate payload for the agent
+    if not isinstance(agent_payload, dict):
+        error_msg = "Invalid agent_payload: must be a dictionary"
+        print(error_msg)
+        raise ValueError(error_msg)
+    
+    required_fields = ['agent_email', 'from', 'to', 'subject', 'body']
+    for field in required_fields:
+        if field not in agent_payload:
+            error_msg = f"Missing required field in agent_payload: {field}"
+            print(error_msg)
+            raise ValueError(error_msg)
+        
+        if agent_payload[field] is None or (isinstance(agent_payload[field], str) and agent_payload[field].strip() == ''):
+            error_msg = f"Empty or null value for required field: {field}"
+            print(error_msg)
+            raise ValueError(error_msg)
+    
+    # Validate email fields
+    if not isinstance(agent_payload['to'], list) or len(agent_payload['to']) == 0:
+        error_msg = "Invalid 'to' field: must be a non-empty list"
+        print(error_msg)
+        raise ValueError(error_msg)
+    
+    # Validate email format for 'to' field
+    email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    for email_addr in agent_payload['to']:
+        # Extract email from format "Name <email@domain.com>" if present
+        email_match = re.search(r'<([^>]+)>', email_addr)
+        if email_match:
+            email_to_check = email_match.group(1)
+        else:
+            email_to_check = email_addr.strip()
+        
+        if not re.match(email_pattern, email_to_check):
+            error_msg = f"Invalid email format in 'to' field: {email_addr}"
+            print(error_msg)
+            raise ValueError(error_msg)
+    
+    # Validate 'from' field email format
+    from_email = agent_payload['from']
+    from_match = re.search(r'<([^>]+)>', from_email)
+    if from_match:
+        from_email_to_check = from_match.group(1)
+    else:
+        from_email_to_check = from_email.strip()
+    
+    if not re.match(email_pattern, from_email_to_check):
+        error_msg = f"Invalid email format in 'from' field: {from_email}"
+        print(error_msg)
+        raise ValueError(error_msg)
+    
+    # Validate 'cc' field if present
+    if 'cc' in agent_payload and agent_payload['cc'] is not None:
+        if not isinstance(agent_payload['cc'], list):
+            error_msg = "Invalid 'cc' field: must be a list"
+            print(error_msg)
+            raise ValueError(error_msg)
+        
+        for email_addr in agent_payload['cc']:
+            email_match = re.search(r'<([^>]+)>', email_addr)
+            if email_match:
+                email_to_check = email_match.group(1)
+            else:
+                email_to_check = email_addr.strip()
+            
+            if not re.match(email_pattern, email_to_check):
+                error_msg = f"Invalid email format in 'cc' field: {email_addr}"
+                print(error_msg)
+                raise ValueError(error_msg)
+    
+    print("Agent payload validation successful")
+    
+    # Generate a unique session ID (must be 33+ characters)
+    session_id = f"test-session-{uuid.uuid4().hex}-{int(datetime.now().timestamp())}"
+    
+    # Invoke the agent
+    try:
+        agent_payload = json.dumps(agent_payload)
+        print(f"Invoking agent runtime with payload: {agent_payload}, session_id: {session_id}")
+        response = client.invoke_agent_runtime(
+            agentRuntimeArn=AGENT_RUNTIME_ARN,
+            runtimeSessionId=session_id,
+            payload=agent_payload,
+            qualifier="DEFAULT"
+        )
+        print(f"Agent runtime response: {str(response)}")
+    except Exception as invoke_error:
+        print(f"Failed to invoke agent runtime: {str(invoke_error)}")
+        raise
+
+    return True
 
 def parseEmail(event, context):
     """Main Lambda handler for parsing and storing emails from SES"""
@@ -351,6 +458,17 @@ def parseEmail(event, context):
         
         # Store in DynamoDB
         store_email_in_dynamodb(dynamodb_table, dynamodb_item)
+
+        # invoke the ea agent
+        agent_payload = {
+            "agent_email": agent_email,
+            "from": parsed_email['from'],
+            "to": parsed_email['to'],
+            "cc": parsed_email['cc'],
+            "subject": parsed_email['subject'],
+            "body": parsed_email['body']
+        }
+        invoke_ea_agent(agent_payload)
         
         # Return success response
         return {

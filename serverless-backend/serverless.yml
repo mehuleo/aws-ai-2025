@@ -63,8 +63,10 @@ functions:
         Resource: "*"
       - Effect: Allow
         Action:
-          - ses:*
-        Resource: "*"
+          - bedrock-agentcore:InvokeAgentRuntime
+        Resource:
+          - "${file(./serverless-config.yml):AGENT_RUNTIME_ARN}"
+          - "${file(./serverless-config.yml):AGENT_RUNTIME_ARN}/*"
       - Effect: Allow
         Action:
           - dynamodb:PutItem
@@ -73,9 +75,9 @@ functions:
           - dynamodb:Query
           - dynamodb:Scan
         Resource: 
-          - "arn:aws:dynamodb:*:*:table/${file(./serverless-config.yml):EMAILS_TABLE_NAME}"
-          - "arn:aws:dynamodb:*:*:table/${file(./serverless-config.yml):SUBSCRIBERS_TABLE_NAME}"
-          - "arn:aws:dynamodb:*:*:table/${file(./serverless-config.yml):AGENTS_ALLOCATION_TABLE_NAME}"
+          - "arn:aws:dynamodb:us-east-1:*:table/${file(./serverless-config.yml):EMAILS_TABLE_NAME}"
+          - "arn:aws:dynamodb:us-east-1:*:table/${file(./serverless-config.yml):SUBSCRIBERS_TABLE_NAME}"
+          - "arn:aws:dynamodb:us-east-1:*:table/${file(./serverless-config.yml):AGENTS_ALLOCATION_TABLE_NAME}"
     package:
       include:
         - functions/utils/**
@@ -95,7 +97,8 @@ functions:
           - dynamodb:Query
           - dynamodb:Scan
         Resource: 
-          - "arn:aws:dynamodb:*:*:table/${file(./serverless-config.yml):SUBSCRIBERS_TABLE_NAME}"
+          - "arn:aws:dynamodb:us-east-1:*:table/${file(./serverless-config.yml):SUBSCRIBERS_TABLE_NAME}"
+          - "arn:aws:dynamodb:us-east-1:*:table/${file(./serverless-config.yml):AGENTS_ALLOCATION_TABLE_NAME}"
     package:
       include:
         - functions/auth/**
@@ -129,12 +132,13 @@ functions:
           - dynamodb:GetItem
           - dynamodb:PutItem
         Resource: 
-          - "arn:aws:dynamodb:*:*:table/${file(./serverless-config.yml):SUBSCRIBERS_TABLE_NAME}"
-          - "arn:aws:dynamodb:*:*:table/${file(./serverless-config.yml):AGENTS_ALLOCATION_TABLE_NAME}"
+          - "arn:aws:dynamodb:us-east-1:*:table/${file(./serverless-config.yml):SUBSCRIBERS_TABLE_NAME}"
+          - "arn:aws:dynamodb:us-east-1:*:table/${file(./serverless-config.yml):AGENTS_ALLOCATION_TABLE_NAME}"
       - Effect: Allow
         Action:
           - ses:SendEmail
-        Resource: "*"
+        Resource: 
+          - "arn:aws:ses:*:*:identity/${file(./serverless-config.yml):SES_FROM_EMAIL}"
     package:
       include:
         - functions/api/**
@@ -153,8 +157,8 @@ functions:
           - dynamodb:GetItem
           - dynamodb:Scan
         Resource: 
-          - "arn:aws:dynamodb:*:*:table/${file(./serverless-config.yml):SUBSCRIBERS_TABLE_NAME}"
-          - "arn:aws:dynamodb:*:*:table/${file(./serverless-config.yml):AGENTS_ALLOCATION_TABLE_NAME}"
+          - "arn:aws:dynamodb:us-east-1:*:table/${file(./serverless-config.yml):SUBSCRIBERS_TABLE_NAME}"
+          - "arn:aws:dynamodb:us-east-1:*:table/${file(./serverless-config.yml):AGENTS_ALLOCATION_TABLE_NAME}"
     package:
       include:
         - functions/api/**
@@ -171,7 +175,8 @@ functions:
           - dynamodb:GetItem
           - dynamodb:UpdateItem
         Resource: 
-          - "arn:aws:dynamodb:*:*:table/${file(./serverless-config.yml):SUBSCRIBERS_TABLE_NAME}"
+          - "arn:aws:dynamodb:us-east-1:*:table/${file(./serverless-config.yml):SUBSCRIBERS_TABLE_NAME}"
+          - "arn:aws:dynamodb:us-east-1:*:table/${file(./serverless-config.yml):AGENTS_ALLOCATION_TABLE_NAME}"
     package:
       include:
         - functions/google_calendar/**
@@ -187,7 +192,8 @@ functions:
           - dynamodb:GetItem
           - dynamodb:UpdateItem
         Resource: 
-          - "arn:aws:dynamodb:*:*:table/${file(./serverless-config.yml):SUBSCRIBERS_TABLE_NAME}"
+          - "arn:aws:dynamodb:us-east-1:*:table/${file(./serverless-config.yml):SUBSCRIBERS_TABLE_NAME}"
+          - "arn:aws:dynamodb:us-east-1:*:table/${file(./serverless-config.yml):AGENTS_ALLOCATION_TABLE_NAME}"
     package:
       include:
         - functions/google_calendar/**
@@ -203,7 +209,8 @@ functions:
           - dynamodb:GetItem
           - dynamodb:UpdateItem
         Resource: 
-          - "arn:aws:dynamodb:*:*:table/${file(./serverless-config.yml):SUBSCRIBERS_TABLE_NAME}"
+          - "arn:aws:dynamodb:us-east-1:*:table/${file(./serverless-config.yml):SUBSCRIBERS_TABLE_NAME}"
+          - "arn:aws:dynamodb:us-east-1:*:table/${file(./serverless-config.yml):AGENTS_ALLOCATION_TABLE_NAME}"
     package:
       include:
         - functions/google_calendar/**
@@ -219,7 +226,8 @@ functions:
           - dynamodb:GetItem
           - dynamodb:UpdateItem
         Resource: 
-          - "arn:aws:dynamodb:*:*:table/${file(./serverless-config.yml):SUBSCRIBERS_TABLE_NAME}"
+          - "arn:aws:dynamodb:us-east-1:*:table/${file(./serverless-config.yml):SUBSCRIBERS_TABLE_NAME}"
+          - "arn:aws:dynamodb:us-east-1:*:table/${file(./serverless-config.yml):AGENTS_ALLOCATION_TABLE_NAME}"
     package:
       include:
         - functions/google_calendar/**
@@ -235,7 +243,8 @@ functions:
           - dynamodb:GetItem
           - dynamodb:UpdateItem
         Resource: 
-          - "arn:aws:dynamodb:*:*:table/${file(./serverless-config.yml):SUBSCRIBERS_TABLE_NAME}"
+          - "arn:aws:dynamodb:us-east-1:*:table/${file(./serverless-config.yml):SUBSCRIBERS_TABLE_NAME}"
+          - "arn:aws:dynamodb:us-east-1:*:table/${file(./serverless-config.yml):AGENTS_ALLOCATION_TABLE_NAME}"
     package:
       include:
         - functions/google_calendar/**
@@ -251,7 +260,8 @@ functions:
           - dynamodb:GetItem
           - dynamodb:UpdateItem
         Resource: 
-          - "arn:aws:dynamodb:*:*:table/${file(./serverless-config.yml):SUBSCRIBERS_TABLE_NAME}"
+          - "arn:aws:dynamodb:us-east-1:*:table/${file(./serverless-config.yml):SUBSCRIBERS_TABLE_NAME}"
+          - "arn:aws:dynamodb:us-east-1:*:table/${file(./serverless-config.yml):AGENTS_ALLOCATION_TABLE_NAME}"
     package:
       include:
         - functions/google_calendar/**
@@ -267,7 +277,8 @@ functions:
           - dynamodb:GetItem
           - dynamodb:UpdateItem
         Resource: 
-          - "arn:aws:dynamodb:*:*:table/${file(./serverless-config.yml):SUBSCRIBERS_TABLE_NAME}"
+          - "arn:aws:dynamodb:us-east-1:*:table/${file(./serverless-config.yml):SUBSCRIBERS_TABLE_NAME}"
+          - "arn:aws:dynamodb:us-east-1:*:table/${file(./serverless-config.yml):AGENTS_ALLOCATION_TABLE_NAME}"
     package:
       include:
         - functions/google_calendar/**
@@ -283,7 +294,8 @@ functions:
           - dynamodb:GetItem
           - dynamodb:UpdateItem
         Resource: 
-          - "arn:aws:dynamodb:*:*:table/${file(./serverless-config.yml):SUBSCRIBERS_TABLE_NAME}"
+          - "arn:aws:dynamodb:us-east-1:*:table/${file(./serverless-config.yml):SUBSCRIBERS_TABLE_NAME}"
+          - "arn:aws:dynamodb:us-east-1:*:table/${file(./serverless-config.yml):AGENTS_ALLOCATION_TABLE_NAME}"
     package:
       include:
         - functions/google_calendar/**

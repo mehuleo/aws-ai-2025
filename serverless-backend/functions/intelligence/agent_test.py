@@ -49,12 +49,6 @@ def test_invoke(event, context):
         else:
             body = event.get('body', {})
         
-        prompt = body.get('prompt')
-        
-        if not prompt:
-            logger.error("Missing required parameter: prompt")
-            return create_response(400, {'error': 'Missing required parameter: prompt'})
-        
         # Get the agent runtime ARN from environment variables
         agent_runtime_arn = os.environ.get('AGENT_RUNTIME_ARN')
         
@@ -70,15 +64,14 @@ def test_invoke(event, context):
             raise
         
         # Create payload for the agent
-        payload = json.dumps({
-            "prompt": prompt
-        })
+        payload = json.dumps(body)
         
         # Generate a unique session ID (must be 33+ characters)
         session_id = f"test-session-{uuid.uuid4().hex}-{int(datetime.now().timestamp())}"
         
         # Invoke the agent
         try:
+            print(f"Invoking agent runtime with payload: {payload}, session_id: {session_id}")
             response = client.invoke_agent_runtime(
                 agentRuntimeArn=agent_runtime_arn,
                 runtimeSessionId=session_id,
