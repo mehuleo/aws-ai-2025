@@ -143,14 +143,14 @@ Each tool must appear **verbatim** in the `toolName` property when referenced in
       "intent": "tool_execution",
       "stepOutcome": "Find available times for the marketing team this week.",
       "context": "Check shared marketing calendar for free slots within this week.",
-      "toolName": "calendar.findAvailability"
+      "toolName": "calendar-getAvailability___get_availability"
     },
     {
       "executionOrder": 2,
       "intent": "tool_execution",
       "stepOutcome": "Create event in user's calendar at agreed-upon time.",
       "context": "Use chosen time slot to book meeting with marketing team.",
-      "toolName": "calendar.createEvent"
+      "toolName": "calendar-createEvent___create_event"
     },
     {
       "executionOrder": 3,

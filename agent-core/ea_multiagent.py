@@ -491,6 +491,11 @@ def execute_plan(execution_plan: ExecutionPlan, original_email: EmailPayload) ->
         print(f"Step {step.executionOrder} completed with status: {result.status}")
         if result.error:
             print(f"Step {step.executionOrder} error: {result.error}")
+        
+        # Break the loop if the intent is "communicate"
+        if step.intent == "communicate":
+            print(f"Breaking execution loop after communicate step {step.executionOrder}")
+            break
     
     print(f"Plan execution completed. {len(execution_results)} steps processed.")
     return execution_results

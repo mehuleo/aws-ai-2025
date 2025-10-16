@@ -49,7 +49,7 @@ The agent receives three sections via user prompt:
   "executionOrder": 2,
   "stepOutcome": "Schedule a meeting with the client to discuss project updates.",
   "context": "Client: John Doe; Date: October 20th, 2025; Time: 10:00 AM - 11:00 AM; Location: Zoom; Meeting purpose: project update.",
-  "toolName": "calendar.createEvent"
+  "toolName": "calendar-createEvent___create_event"
 }
 ```
 
@@ -74,7 +74,7 @@ The agent receives three sections via user prompt:
 {
   "from": "ceo@mycompany.com",
   "to": "assistant@mycompany.com",
-  "cc": "",
+  "cc": "john.doe@company.com",
   "agent_email": "assistant@mycompany.com",
   "subject": "Schedule a client update call",
   "body": "Please arrange a meeting with John Doe for next week to go over project updates.",
@@ -108,7 +108,7 @@ The agent receives three sections via user prompt:
 ```json
 {
   "status": "success",
-  "toolName": "calendar.createEvent",
+  "toolName": "calendar-createEvent___create_event",
   "apiPayload": {
     "title": "Project Update Meeting with John Doe",
     "attendees": ["john.doe@company.com"],
@@ -124,7 +124,7 @@ The agent receives three sections via user prompt:
 ```json
 {
   "status": "error",
-  "toolName": "calendar.createEvent",
+  "toolName": "calendar-createEvent___create_event",
   "error": "Missing meeting date and time to create calendar event.",
   "apiPayload": null
 }
