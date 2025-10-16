@@ -327,9 +327,14 @@ def invoke_ea_agent(agent_payload):
         print(error_msg)
         raise ValueError(error_msg)
     
-    # Initialize Bedrock Agentcore client
+    # Initialize Bedrock Agentcore client with timeout configuration
     try:
-        client = boto3.client('bedrock-agentcore', region_name='us-east-1')
+        config = boto3.session.Config(
+            read_timeout=1,  # 60 seconds timeout for read operations
+            connect_timeout=1,  # 10 seconds timeout for connection
+            retries={'max_attempts': 0}  # No retries
+        )
+        client = boto3.client('bedrock-agentcore', region_name='us-east-1', config=config)
     except Exception as client_error:
         print(f"Failed to initialize Bedrock Agentcore client: {str(client_error)}")
         raise
@@ -414,16 +419,15 @@ def invoke_ea_agent(agent_payload):
     try:
         agent_payload = json.dumps(agent_payload)
         print(f"Invoking agent runtime with payload: {agent_payload}, session_id: {session_id}")
-        response = client.invoke_agent_runtime(
+        client.invoke_agent_runtime(
             agentRuntimeArn=AGENT_RUNTIME_ARN,
             runtimeSessionId=session_id,
             payload=agent_payload,
             qualifier="DEFAULT"
         )
-        print(f"Agent runtime response: {str(response)}")
+        return True
     except Exception as invoke_error:
         print(f"Failed to invoke agent runtime: {str(invoke_error)}")
-        raise
 
     return True
 
@@ -470,26 +474,7 @@ def parseEmail(event, context):
         }
         invoke_ea_agent(agent_payload)
         
-        # Return success response
-        return {
-            "statusCode": 200,
-            "body": json.dumps({
-                "message": "Email parsed and stored successfully",
-                "uuid": record_uuid,
-                "email": parsed_email
-            })
-        }
-        
     except Exception as e:
-        # Log error details for debugging
-        error_msg = f"Error parsing email: {str(e)}"
-        print(error_msg)
-        print(f"Traceback: {traceback.format_exc()}")
+        print(f"Error parsing email: {str(e)}")
         
-        return {
-            "statusCode": 500,
-            "body": json.dumps({
-                "message": "Error parsing email",
-                "error": str(e)
-            })
-        }
+    return True
