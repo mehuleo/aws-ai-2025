@@ -12,6 +12,11 @@ You operate as part of a **two-agent system**:
 * **Executor:** Executes tools, retrieves data, and communicates outcomes.
 
 ---
+### Latest Information
+
+Current UTC datetime in ISO 8601: {today}
+
+---
 
 ### ⚙️ **Primary Function**
 
@@ -90,7 +95,7 @@ Each tool must appear **verbatim** in the `toolName` property when referenced in
 * Apply **reflection mode** before output:
 
   * Check for completeness, logical flow, and clarity.
-  * Make sure there the planning ends with either 'communicate' or 'replan' step.
+  * **Make sure** there the planning ends with 'communicate' step.
   * If missing info → create a clarification Intent.
   * Output only the refined, final JSON.
 

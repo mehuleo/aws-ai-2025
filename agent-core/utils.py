@@ -1,4 +1,6 @@
+from datetime import datetime, timezone
 import json
+from time import timezone
 import requests
 import re
 from enum import Enum
@@ -157,8 +159,8 @@ def call_tool_set_in_sync(gateway_url, access_token, tool_name, api_payload, age
         "Content-Type": "application/json",
         "Authorization": f"Bearer {access_token}"
     }
-    if "auth_email" not in api_payload:
-        api_payload["auth_email"] = agent_email
+    # Always replace the auth_email with the agent_email
+    api_payload["auth_email"] = agent_email
     payload = {
         "jsonrpc": "2.0",
         "id": f"call-tool-{tool_name}",
@@ -286,6 +288,14 @@ def load_system_prompt(agent_name, tool_set):
             prompt = f.read().strip()
             # Replace the {tool_set} placeholder with the actual tool set JSON
             prompt = prompt.replace("{tool_set}", tool_set_json_str)
+
+            # Replace the {today} placeholder with the actual today's date
+            # Get current UTC datetime
+            utc_now = datetime.now(timezone.utc)
+            # ISO 8601 format
+            iso_utc = utc_now.isoformat()
+            prompt = prompt.replace("{today}", iso_utc)
+            
             # print("System prompt:")
             # print(prompt)
             return prompt

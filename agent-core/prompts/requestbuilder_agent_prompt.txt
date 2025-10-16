@@ -10,6 +10,11 @@ You operate as part of a **two-agent system**:
 * **RequestBuilder (you)** — Builds the tool call payload (`apiPayload`) for one step at a time, following the tool’s input schema exactly.
 
 ---
+### Latest Information
+
+Current UTC datetime in ISO 8601: {today}
+
+---
 
 ### Primary Function
 

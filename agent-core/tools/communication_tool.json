@@ -1,10 +1,17 @@
 [
     {
         "name": "communicate",
-        "description": "Sends an email communication to specified recipients. Use this tool when you need to send emails, notifications, or any form of communication via email. Example: to = ['John Doe <john.doe@example.com>'], subject = 'Project Update Meeting with John Doe', body = 'Hey Mehul,\n    I have created a new event in your calendar for tomorrow. Please check it out.\nThanks,\nSuperagent'",
+        "description": "Sends an email reply to specified recipients. Use this tool to communicate with users via email—such as providing summaries of completed tasks, asking follow-up questions, or sharing important updates.\n Example: {\"from\": \"ai_assistant@superagent.diy\", \"to\": [\"John Doe <john.doe@example.com>\"], \"body\": \"Hey Mehul,\n\nI’ve scheduled a new event in your calendar for tomorrow. Let me know if you'd like to adjust the time.\n\nThanks,\nSuperagent\"\n}",
         "inputSchema": {
             "type": "object",
             "properties": {
+                "from": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "The email address of the agent i.e., agent_email. This will always be of an agent, as this email is in response to an email from a user."
+                },
                 "to": {
                     "type": "array",
                     "items": {

@@ -8,9 +8,7 @@ ENV UV_SYSTEM_PYTHON=1 \
     PYTHONUNBUFFERED=1 \
     DOCKER_CONTAINER=1 \
     AWS_REGION=us-east-1 \
-    AWS_DEFAULT_REGION=us-east-1 \
-    BEDROCK_AGENTCORE_MEMORY_ID=test_agent_mem-wmWVwL400H \
-    BEDROCK_AGENTCORE_MEMORY_NAME=planning_agent_memory
+    AWS_DEFAULT_REGION=us-east-1
 
 
 
@@ -46,4 +44,4 @@ COPY . .
 
 # Use the full module path
 
-CMD ["opentelemetry-instrument", "python", "-m", "planning_agent"]
+CMD ["opentelemetry-instrument", "python", "-m", "ea_multiagent"]
