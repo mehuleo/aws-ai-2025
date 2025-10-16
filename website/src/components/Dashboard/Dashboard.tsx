@@ -245,26 +245,6 @@ class Dashboard extends Component<DashboardProps, DashboardState> {
               <SidebarMenu>
                 <SidebarMenuItem>
                   <SidebarMenuButton
-                    onClick={() => this.handleSectionChange('settings')}
-                    isActive={activeSection === 'settings'}
-                    className={activeSection === 'settings' ? 'bg-purple-100 text-purple-600 font-semibold border-r-4 border-purple-600' : 'text-gray-600 hover:bg-gray-100 hover:text-purple-600'}
-                  >
-                    <Settings className="w-5 h-5" />
-                    <span>Settings</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    onClick={() => this.handleSectionChange('customize')}
-                    isActive={activeSection === 'customize'}
-                    className={activeSection === 'customize' ? 'bg-purple-100 text-purple-600 font-semibold border-r-4 border-purple-600' : 'text-gray-600 hover:bg-gray-100 hover:text-purple-600'}
-                  >
-                    <Sliders className="w-5 h-5" />
-                    <span>Customize Agent</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton
                     onClick={() => this.handleSectionChange('calendars')}
                     isActive={activeSection === 'calendars'}
                     className={activeSection === 'calendars' ? 'bg-purple-100 text-purple-600 font-semibold border-r-4 border-purple-600' : 'text-gray-600 hover:bg-gray-100 hover:text-purple-600'}
@@ -273,6 +253,7 @@ class Dashboard extends Component<DashboardProps, DashboardState> {
                     <span>Link Calendars</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
+
                 <SidebarMenuItem>
                   <SidebarMenuButton
                     onClick={() => this.handleSectionChange('create-assistant')}
@@ -281,6 +262,28 @@ class Dashboard extends Component<DashboardProps, DashboardState> {
                   >
                     <Plus className="w-5 h-5" />
                     <span>Create Executive Assistant</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    onClick={() => this.handleSectionChange('settings')}
+                    isActive={activeSection === 'settings'}
+                    className={activeSection === 'settings' ? 'bg-purple-100 text-purple-600 font-semibold border-r-4 border-purple-600' : 'text-gray-600 hover:bg-gray-100 hover:text-purple-600'}
+                  >
+                    <Settings className="w-5 h-5" />
+                    <span>Settings</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    onClick={() => this.handleSectionChange('customize')}
+                    isActive={activeSection === 'customize'}
+                    className={activeSection === 'customize' ? 'bg-purple-100 text-purple-600 font-semibold border-r-4 border-purple-600' : 'text-gray-600 hover:bg-gray-100 hover:text-purple-600'}
+                  >
+                    <Sliders className="w-5 h-5" />
+                    <span>Customize Agent</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               </SidebarMenu>
