@@ -47,7 +47,7 @@ class Dashboard extends Component<DashboardProps, DashboardState> {
   constructor(props: DashboardProps) {
     super(props);
     this.state = {
-      activeSection: 'settings',
+      activeSection: 'calendars',
       isAuthenticated: false,
       user: null,
       isLoading: true

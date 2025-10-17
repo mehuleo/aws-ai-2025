@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import './HomePage.css';
 import logo from '../../assets/images/logo.png';
 import hero from '../../assets/images/hero.jpg';
+import features from '../../assets/images/hero-1.jpg';
 import GoogleLoginButton from '../GoogleLoginButton/GoogleLoginButton';
 import { Route } from '../../constants/routes';
 
@@ -31,8 +32,8 @@ class HomePage extends Component<HomePageProps> {
 
   handleLoginSuccess = (user: any) => {
     console.log('Login successful:', user);
-    // Redirect to dashboard settings after successful login
-    window.location.href = Route.dashboard.settings;
+    // Redirect to dashboard calendars after successful login
+    window.location.href = Route.dashboard.calendars;
   };
 
   handleTokenResponse = (response: any) => {
@@ -63,6 +64,9 @@ class HomePage extends Component<HomePageProps> {
           </section>
           <section className="home-hero">
             <img src={hero} alt="Hero" className="home-hero-image" />
+          </section>
+          <section className="features-hero">
+            <img src={features} alt="Feature-set" className="home-hero-image" />
           </section>
         </main>
       </div>
