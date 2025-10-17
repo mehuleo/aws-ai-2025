@@ -8,4 +8,6 @@ GOOGLE_AUTH_REDIRECT_URI: your-google-auth-redirect-uri
 AGENT_RUNTIME_ARN: arn:aws:bedrock-agentcore:us-east-1:....
 INVITE_CODE: INVITE_CODE
 SES_FROM_EMAIL: wellcome@example.com
-
+# SES Gatekeeper configuration
+GATEKEEPER_MAX_EMAIL_SIZE_KB: 100
+GATEKEEPER_EXCEPTION_EMAILS: "admin@example.com,support@example.com"
