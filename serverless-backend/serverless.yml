@@ -20,6 +20,11 @@ provider:
     AGENT_RUNTIME_ARN: ${file(./serverless-config.yml):AGENT_RUNTIME_ARN}
     INVITE_CODE: ${file(./serverless-config.yml):INVITE_CODE}
     SES_FROM_EMAIL: ${file(./serverless-config.yml):SES_FROM_EMAIL}
+    GATEKEEPER_MAX_EMAIL_SIZE_KB: ${file(./serverless-config.yml):GATEKEEPER_MAX_EMAIL_SIZE_KB}
+    GATEKEEPER_EXCEPTION_EMAILS: ${file(./serverless-config.yml):GATEKEEPER_EXCEPTION_EMAILS}
+    GATEKEEPER_REBOUND_FROM_EMAIL: ${file(./serverless-config.yml):GATEKEEPER_REBOUND_FROM_EMAIL}
+    GATEKEEPER_SEND_REBOUND_EMAILS: ${file(./serverless-config.yml):GATEKEEPER_SEND_REBOUND_EMAILS}
+    GATEKEEPER_REBOUND_IDENTITY: ${file(./serverless-config.yml):GATEKEEPER_REBOUND_IDENTITY}
 
 plugins:
   - serverless-python-requirements
@@ -53,6 +58,24 @@ functions:
     package:
       include:
         - functions/health/**
+  gatekeeper:
+    handler: functions/utils/gatekeeper.gatekeeper
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:Query
+          - dynamodb:GetItem
+          - dynamodb:Scan
+        Resource: 
+          - "arn:aws:dynamodb:us-east-1:*:table/${file(./serverless-config.yml):AGENTS_ALLOCATION_TABLE_NAME}"
+      - Effect: Allow
+        Action:
+          - ses:SendEmail
+        Resource: 
+          - "arn:aws:ses:us-east-1:*:identity/${file(./serverless-config.yml):GATEKEEPER_REBOUND_IDENTITY}"
+    package:
+      include:
+        - functions/utils/gatekeeper.py
   parseEmail:
     handler: functions/utils/email_utils.parseEmail
     iamRoleStatements:
@@ -102,21 +125,21 @@ functions:
     package:
       include:
         - functions/auth/**
-  testInvoke:
-    handler: functions/intelligence/agent_test.test_invoke
-    events:
-      - http:
-          path: v1/test-invoke
-          method: post
-          cors: true
-    iamRoleStatements:
-      - Effect: Allow
-        Action:
-          - bedrock-agentcore:InvokeAgentRuntime
-        Resource: "*"
-    package:
-      include:
-        - functions/intelligence/**
+  # testInvoke:
+  #   handler: functions/intelligence/agent_test.test_invoke
+  #   events:
+  #     - http:
+  #         path: v1/test-invoke
+  #         method: post
+  #         cors: true
+  #   iamRoleStatements:
+  #     - Effect: Allow
+  #       Action:
+  #         - bedrock-agentcore:InvokeAgentRuntime
+  #       Resource: "*"
+  #   package:
+  #     include:
+  #       - functions/intelligence/**
   
   validateInvite:
     handler: functions/api/validate_invite.validate_invite
@@ -302,6 +325,13 @@ functions:
 
 resources:
   Resources:
+    GatekeeperLambdaPermission:
+      Type: AWS::Lambda::Permission
+      Properties:
+        FunctionName:
+          Ref: GatekeeperLambdaFunction
+        Action: lambda:InvokeFunction
+        Principal: ses.amazonaws.com
     ParseEmailLambdaPermission:
       Type: AWS::Lambda::Permission
       Properties:
