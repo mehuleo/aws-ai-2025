@@ -30,6 +30,10 @@ This serverless backend provides:
 └─────────────────────────────────────────────────────────────────┘
 ```
 
+## High-Level System Design
+
+![High-Level System Design](../doc/superagent-HLD.png)
+
 ## Project Structure
 
 ```
