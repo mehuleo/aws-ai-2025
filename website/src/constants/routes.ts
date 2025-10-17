@@ -5,6 +5,8 @@
 
 export const Route = {
   home: '/',
+  privacy: '/privacy',
+  terms: '/terms',
   dashboard: {
     base: '/dashboard',
     settings: '/dashboard/settings',
