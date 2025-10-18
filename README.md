@@ -29,9 +29,43 @@ Superagent manages your calendar with the finesse of a world-class Executive Ass
 
 ## Architecture Overview
 
-Superagent is built on a serverless, event-driven architecture leveraging AWS services and Amazon Bedrock AgentCore. The system consists of four main pipelines:
+Superagent is built on a serverless, event-driven architecture leveraging AWS services and Amazon Bedrock AgentCore. The system consists of four main pipelines and meets AWS-defined AI agent qualification requirements:
 
 ![High-Level Architecture](doc/superagent-HLD.png)
+
+### Core Components
+
+**AI & Agent Infrastructure:**
+- **Amazon Bedrock AgentCore Runtime and Gateway**: Core AI agent execution environment
+- **Amazon Bedrock Nova**: Advanced reasoning LLM for decision-making and natural language understanding
+- **Amazon AgentCore SDK and Strands Agents SDK**: Agent development and orchestration frameworks
+
+**Backend Services:**
+- **AWS Lambda**: Serverless compute for backend functions and tool execution
+- **AWS API Gateway**: RESTful API endpoints and request routing
+- **AWS SES**: Email sending and receiving infrastructure
+- **DynamoDB**: User data, access tokens, and agent mappings storage
+- **AWS S3**: Email storage and processing
+
+**Frontend:**
+- **React.js**: Modern web application framework for user interface
+- **Python**: Backend service development and agent logic
+
+### AWS AI Agent Qualification Compliance
+
+This architecture satisfies all AWS-defined AI agent qualification requirements:
+
+✅ **Meets AWS-defined AI agent qualification**: Built on Amazon Bedrock AgentCore with proper agent runtime and gateway integration
+
+✅ **Uses reasoning LLMs for decision-making**: Powered by Amazon Bedrock Nova Pro for advanced reasoning, planning, and autonomous decision-making
+
+✅ **Demonstrates autonomous capabilities**: Multi-agent system operates independently with minimal human intervention, processing emails and executing calendar tasks autonomously
+
+✅ **Integrates APIs, databases, external tools, and other agents**: 
+- **APIs**: Google Calendar API integration for calendar operations
+- **Databases**: DynamoDB for persistent data storage
+- **External Tools**: Email processing, web search capabilities, and calendar management tools
+- **Multi-Agent System**: Three specialized agents (Planning, Executor, Communication) working collaboratively
 
 ### 1. User Account Setup Pipeline
 - **User Webapp**: React.js frontend for user registration and agent creation
@@ -47,11 +81,11 @@ Superagent is built on a serverless, event-driven architecture leveraging AWS se
 
 ### 3. Amazon Bedrock AgentCore (Core Intelligence)
 - **Multi-Agent System**: Three specialized agents working together:
-  - **Planning Agent**: Understands requests and creates execution plans
-  - **Executor Agent**: Executes planned actions using available tools
+  - **Planning Agent**: Understands requests and creates execution plans using reasoning LLMs
+  - **Executor Agent**: Executes planned actions using available tools autonomously
   - **Communication Agent**: Formulates responses to users
 - **Tool Integration**: Lambda functions serve as tools for calendar operations via Bedrock AgentCore Gateway
-- **LLM Integration**: Powered by Amazon Bedrock/Nova Pro LLM model for natural language understanding and reasoning
+- **LLM Integration**: Powered by Amazon Bedrock Nova Pro for natural language understanding and advanced reasoning
 
 ### 4. Outbound Email Processing Pipeline
 - **Response Generation**: AI agents generate contextual responses
@@ -140,7 +174,7 @@ serverless deploy
 
 ### Prerequisites
 - Node.js (v16 or higher)
-- Python (v3.8 or higher)
+- Python (v3.12 or higher)
 - AWS CLI configured
 - Google Cloud Console project with Calendar API enabled
 
@@ -183,13 +217,14 @@ serverless deploy
 - `BEDROCK_MODEL_ID`: Amazon Bedrock model identifier
 
 ### AWS Services Used
-- **Lambda**: Serverless compute for backend functions
-- **API Gateway**: RESTful API endpoints
-- **DynamoDB**: User data and token storage
-- **SES**: Email sending and receiving
-- **SQS**: Message queuing for email processing
-- **S3**: Email storage and processing
-- **Bedrock**: AI/ML model hosting
+- **Amazon Bedrock AgentCore Runtime and Gateway**: Core AI agent execution environment
+- **Amazon Bedrock Nova**: Advanced reasoning LLM for decision-making
+- **Amazon AgentCore SDK and Strands Agents SDK**: Agent development frameworks
+- **AWS Lambda**: Serverless compute for backend functions and tool execution
+- **AWS API Gateway**: RESTful API endpoints and request routing
+- **AWS SES**: Email sending and receiving infrastructure
+- **DynamoDB**: User data, access tokens, and agent mappings storage
+- **AWS S3**: Email storage and processing
 
 ## Contributing
 
