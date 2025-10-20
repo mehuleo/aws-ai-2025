@@ -1,4 +1,5 @@
 boto3
+botocore
 strands-agents
 strands-agents-tools
 bedrock-agentcore
@@ -6,3 +7,4 @@ bedrock-agentcore-starter-toolkit
 requests
 python-dotenv
 mcp
+requests-aws4auth

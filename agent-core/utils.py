@@ -129,14 +129,14 @@ def update_tool_set_in_sync(gateway_url, access_token):
     
     headers = {
         "Content-Type": "application/json",
-        "Authorization": f"Bearer {access_token}"
+        # "Authorization": f"Bearer {access_token}"
     }
     payload = {
         "jsonrpc": "2.0",
         "id": "list-tools-request",
         "method": "tools/list"
     }
-    response = requests.post(gateway_url, headers=headers, json=payload)
+    response = requests.post(gateway_url, headers=headers, json=payload, auth=access_token)
     response_data = response.json()
 
     # Extract tools from the JSON-RPC response structure
@@ -156,7 +156,7 @@ def call_tool_set_in_sync(gateway_url, access_token, tool_name, api_payload, age
     
     headers = {
         "Content-Type": "application/json",
-        "Authorization": f"Bearer {access_token}"
+        # "Authorization": f"Bearer {access_token}"
     }
     # Always replace the auth_email with the agent_email
     api_payload["auth_email"] = agent_email
@@ -171,7 +171,7 @@ def call_tool_set_in_sync(gateway_url, access_token, tool_name, api_payload, age
     }
     
     try:
-        response = requests.post(gateway_url, headers=headers, json=payload, timeout=30)
+        response = requests.post(gateway_url, headers=headers, json=payload, timeout=30, auth=access_token)
         response.raise_for_status()
         response_data = response.json()
         

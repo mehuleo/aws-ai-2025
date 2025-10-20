@@ -2,6 +2,7 @@ from datetime import datetime
 import os
 import json
 import boto3
+from requests_aws4auth import AWS4Auth
 from dotenv import load_dotenv
 from bedrock_agentcore import BedrockAgentCoreApp
 from strands import Agent
@@ -581,11 +582,17 @@ def invoke(payload):
 if __name__ == "__main__":
     try:
         print("Starting Multi-Agent Executive Assistant...")
-        
+
+        # Get AWS credentials (from environment, profile, IAM role, etc.)
+        session = boto3.Session()
+        credentials = session.get_credentials()
+        ACCESS_TOKEN = AWS4Auth(credentials.access_key, credentials.secret_key, 'us-east-1', 'bedrock-agentcore', session_token=credentials.token)
+
         # Initialize access token and tool set
-        print("Fetching access token...")
-        ACCESS_TOKEN = fetch_access_token(CLIENT_ID, CLIENT_SECRET, TOKEN_URL)
-        
+        # print("Fetching access token...")
+        # ACCESS_TOKEN = fetch_access_token(CLIENT_ID, CLIENT_SECRET, TOKEN_URL)
+        # ACCESS_TOKEN = ""
+
         print("Updating tool set...")
         TOOL_SET = update_tool_set_in_sync(GATEWAY_URL, ACCESS_TOKEN)
         print(f"Loaded {len(TOOL_SET)} tools")
