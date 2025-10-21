@@ -6,9 +6,10 @@ Each function authenticates using get_access_token() and interacts with
 the Google Calendar API.
 """
 
+import json
 import logging
 import traceback
-from .auth import get_calendar_service, AuthenticationError
+from .auth import get_calendar_service, AuthenticationError, lookup_email_from_agents_table
 from .utils import (
     get_date_range, 
     format_event_response, 
@@ -260,9 +261,11 @@ def create_event(event, context):
             start_datetime, 
             end_datetime,
             guest_emails,
-            description
+            description,
+            auth_email
         )
         
+        logger.info(f"Event body: {json.dumps(event_body, indent=0)}")
         created_event = service.events().insert(
             calendarId=PRIMARY_CALENDAR,
             body=event_body,
@@ -361,7 +364,7 @@ def update_event(event, context):
         
         if body.get('guest_emails') is not None:
             update_body['attendees'] = [
-                {'email': email} for email in body.get('guest_emails')
+                {'email': email, 'self': False} for email in body.get('guest_emails')
             ]
         
         if body.get('recurrence') is not None:

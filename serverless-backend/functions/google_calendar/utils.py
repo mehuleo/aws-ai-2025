@@ -8,6 +8,7 @@ date handling, event formatting, and overlap detection.
 import logging
 from datetime import datetime, timedelta
 from typing import List, Dict, Any, Optional, Tuple
+from .auth import lookup_email_from_agents_table
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -185,7 +186,7 @@ def validate_input(event, required_fields=None):
 
 
 def build_event_body(event_name, start_datetime, end_datetime, 
-                     guest_emails=None, description=None):
+                     guest_emails=None, description=None, auth_email=None):
     """
     Build event body for Google Calendar API
     
@@ -195,6 +196,7 @@ def build_event_body(event_name, start_datetime, end_datetime,
         end_datetime (str): End datetime in ISO format
         guest_emails (list): List of guest email addresses
         description (str): Event description (optional)
+        auth_email (str): Authenticated user's email for Creator/Organizer
         
     Returns:
         dict: Event body for API request
@@ -214,9 +216,40 @@ def build_event_body(event_name, start_datetime, end_datetime,
     if description:
         event_body['description'] = description
     
+    # Add Creator and Organizer data if auth_email is provided
+    if auth_email:
+        # Creator: always auth_email with self=False
+        event_body['organizer'] = {
+            'email': auth_email,
+            'self': False
+        }
+        
+        # Organizer: lookup email from agents table with self=True
+        try:
+            organizer_email, error = lookup_email_from_agents_table(auth_email)
+            if organizer_email and not error:
+                event_body['creator'] = {
+                    'email': organizer_email,
+                    'self': True
+                }
+            else:
+                logger.warning(f"Could not lookup organizer email for {auth_email}: {error}")
+                # Fallback to auth_email if lookup fails
+                event_body['creator'] = {
+                    'email': auth_email,
+                    'self': True
+                }
+        except Exception as e:
+            logger.error(f"Error looking up organizer email: {str(e)}")
+            # Fallback to auth_email if lookup fails
+            event_body['creator'] = {
+                'email': auth_email,
+                'self': True
+            }
+    
     if guest_emails:
         event_body['attendees'] = [
-            {'email': email} for email in guest_emails
+            {'email': email, 'self': False} for email in guest_emails
         ]
     
     return event_body
