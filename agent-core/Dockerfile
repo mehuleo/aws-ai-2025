@@ -44,4 +44,4 @@ COPY . .
 
 # Use the full module path
 
-CMD ["opentelemetry-instrument", "python", "-m", "ea_multiagent"]
+CMD ["opentelemetry-instrument", "python", "-m", "ea_multiagent_runtime"]
