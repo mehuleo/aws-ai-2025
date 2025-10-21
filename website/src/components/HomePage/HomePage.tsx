@@ -5,6 +5,7 @@ import hero from '../../assets/images/hero.jpg';
 import features from '../../assets/images/hero-1.jpg';
 import GoogleLoginButton from '../GoogleLoginButton/GoogleLoginButton';
 import { Route } from '../../constants/routes';
+import { Link } from 'react-router-dom';
 
 interface HomePageProps {}
 
@@ -69,6 +70,18 @@ class HomePage extends Component<HomePageProps> {
             <img src={features} alt="Feature-set" className="home-hero-image" />
           </section>
         </main>
+        
+        <footer className="home-footer">
+          <div className="footer-content">
+            <div className="footer-links">
+              <Link to={Route.privacy} className="footer-link">Privacy Policy</Link>
+              <Link to={Route.terms} className="footer-link">Terms and Conditions</Link>
+            </div>
+            <div className="footer-copyright">
+              <p>&copy; 2025 Superagent.diy. All rights reserved.</p>
+            </div>
+          </div>
+        </footer>
       </div>
     );
   }
